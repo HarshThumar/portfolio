@@ -20,10 +20,26 @@ URLs (each must be shareable and load directly):
 
 ## Opening: the kit becomes a ball
 
-Inspired by the *idea* of a world assembling itself (as in messenger.abeto.co), done our way, nothing copied.
+Changed 22 Nov 2026 (Harsh): overcast Test-match sky, no stadium during the forming, a proper Test ball, and Harsh's initials as a gold maker's stamp. The feel follows messenger.abeto.co (a small thing assembling in the middle of the screen while the camera slowly orbits it); nothing is copied.
 
 | Time | What happens | Sound (only after the click) |
 |---|---|---|
+| 0 s | Cream screen. A small loading indicator: the **roller rolling along a crease line**, showing real progress. | none |
+| loaded | **Overcast Test-match sky**: soft grey layered clouds drifting, flat diffuse light, no sun, no ground or stadium in view. The camera slowly orbits the centre. | — |
+| +0.3–3 s | Cricket kit drifts in from every side (bats, pads, gloves, helmets, stumps and bails, caps, balls) and gathers into a rough sphere in the centre. | — |
+| +3–3.8 s | The cluster becomes **four red leather quarters** that close together into one Test ball. | — |
+| +3.8–4.6 s | The **seam stitches itself**: the raised main seam with six rows of stitching, then the two quarter seams. | — |
+| +4.6–5.6 s | The ball turns to show a **gold-foil maker's stamp**: "HT" with small curved text around it (HARSH THUMAR · TEST); a light sweep runs across the foil. Our own design, never a real maker's logo. | — |
+| ready | Under the ball: the one-line positioning from 02 and one button **[[COPY: play button]]**. Small: sound on · Scorecard view. | — |
+| click | The ball is **bowled down**: it drops through the cloud layer, the camera follows, the Ahmedabad stadium appears below, the ball pitches on the square and bounces away like a six, and the visitor lands on the roller in the hub. ~3 s. | whoosh, leather-on-turf thud, crowd roar |
+
+Rules:
+- Skippable with any key or tap at any point (jumps to ready). Returning visitors (localStorage, try/catch) start at ready.
+- `prefers-reduced-motion`: the ball is already formed and stamped; the click fades to the hub.
+- No WebGL: go to `/scorecard/` with one line of explanation.
+- The kit is generic equipment: no brand names, no logos, no team colours.
+
+---|---|---|
 | 0 s | Cream screen. A small loading indicator: the **roller rolling along a crease line**, showing real progress. | none |
 | loaded | Cricket kit floats in from every side, in the miniature style: bats, pads, gloves, a helmet, stumps and bails, a cap, a few balls. | — |
 | +0.5–3 s | The pieces fly together and **snap into one giant red leather ball**, seam last. The seam stitches itself closed. | — |
