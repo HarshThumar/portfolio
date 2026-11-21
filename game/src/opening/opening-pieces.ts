@@ -1,104 +1,71 @@
 import * as THREE from 'three/webgpu';
 import type { KitPiece } from './kit-models';
-import { easeInOutCubic, pieceProgress } from './opening-timeline';
+import { easeInOutCubic } from './opening-timeline';
+import flight from './kit-flight.json';
 
-// The kit drifting in from every side of the view and gathering into a tumbling cluster at the
-// centre (docs/03: "all the things coming in"). Positions are local to `cluster`, which sits at
-// the ball's centre.
+// The kit drifting in from round the view, rushing together and piling up into a tumbling
+// cluster (docs/03: "all the things coming in"). The motion is a rigid-body simulation baked in
+// Blender (assets-src/opening/kit_flight.py) and played back here, so the pieces really collide.
 
-// Kit is drawn about twice life size so each piece reads at a glance.
-const PIECE_SCALE = 2.2;
-const ORBIT_SPEED = 0.35;
+interface FlightData {
+  fps: number;
+  scale: number;
+  kinds: string[];
+  centres: number[][];
+  frames: number[][][];
+}
+
+const DATA = flight as FlightData;
 
 export interface ActivePiece {
   piece: KitPiece;
-  start: THREE.Vector3;
-  target: THREE.Vector3;
-  bend: THREE.Vector3;
-  startRot: THREE.Euler;
-  spinAxis: THREE.Vector3;
-  spinRate: number;
-  delay: number;
-  duration: number;
+  /** Sits at the piece's bounding-box centre, where the simulation tracked it. */
+  holder: THREE.Group;
 }
 
-const UP = new THREE.Vector3(0, 1, 0);
-
-function randomDir(out: THREE.Vector3): THREE.Vector3 {
-  const u = Math.random() * 2 - 1;
-  const a = Math.random() * Math.PI * 2;
-  const s = Math.sqrt(1 - u * u);
-  return out.set(Math.cos(a) * s, u * 0.7, Math.sin(a) * s).normalize();
-}
-
-/** A start point 16–30 m out, never behind or right beside the camera. */
-function pickStart(camLocal: THREE.Vector3): THREE.Vector3 {
-  const camDir = camLocal.clone().normalize();
-  const dir = new THREE.Vector3();
-  const start = new THREE.Vector3();
-  for (let tries = 0; tries < 30; tries++) {
-    randomDir(dir);
-    if (dir.dot(camDir) > 0.35) continue;
-    start.copy(dir).multiplyScalar(16 + Math.random() * 14);
-    if (start.distanceTo(camLocal) > 12) break;
-  }
-  return start;
-}
-
-export function setupActivePieces(
-  cluster: THREE.Object3D,
-  pieces: KitPiece[],
-  camLocal: THREE.Vector3
-): ActivePiece[] {
-  const total = pieces.length;
+export function setupActivePieces(cluster: THREE.Object3D, pieces: KitPiece[]): ActivePiece[] {
   return pieces.map((piece, i) => {
-    const start = pickStart(camLocal);
-    const target = randomDir(new THREE.Vector3()).multiplyScalar(1.2 + Math.random() * 2.3);
-    const bend = new THREE.Vector3()
-      .crossVectors(start, UP)
-      .normalize()
-      .multiplyScalar((Math.random() - 0.5) * 12);
-    bend.y += (Math.random() - 0.5) * 6;
-    piece.object.position.copy(start);
-    piece.object.scale.setScalar(PIECE_SCALE);
-    cluster.add(piece.object);
-    return {
-      piece,
-      start,
-      target,
-      bend,
-      startRot: new THREE.Euler(Math.random() * 6.28, Math.random() * 6.28, Math.random() * 6.28),
-      spinAxis: randomDir(new THREE.Vector3()),
-      spinRate: 0.6 + Math.random() * 0.8,
-      delay: 0.3 + (i / total) * 1.2 + Math.random() * 0.15,
-      duration: 0.9 + Math.random() * 0.35
-    };
+    if (DATA.kinds[i] !== piece.kind) {
+      throw new Error(`kit-flight.json is out of date (piece ${i}); run npm run bake:opening`);
+    }
+    const holder = new THREE.Group();
+    const c = DATA.centres[i]!;
+    piece.object.scale.setScalar(DATA.scale);
+    piece.object.position.set(-c[0]! * DATA.scale, -c[1]! * DATA.scale, -c[2]! * DATA.scale);
+    holder.add(piece.object);
+    cluster.add(holder);
+    return { piece, holder };
   });
 }
 
-const goal = new THREE.Vector3();
+const qa = new THREE.Quaternion();
+const qb = new THREE.Quaternion();
 
-/** Flies the kit in and keeps the cluster tumbling; `panels` (0→1) shrinks it into the ball. */
+/** Plays the baked flight at `t` seconds; `panels` (0→1) tucks the pile inside the ball. */
 export function updateActivePieces(active: ActivePiece[], t: number, panels: number): void {
-  const shrink = easeInOutCubic(Math.min(1, panels / 0.7));
-  for (const item of active) {
-    const obj = item.piece.object;
-    const p = pieceProgress(t, item.delay, item.duration);
-    // Once gathered, the cluster slowly turns round its centre.
-    goal.copy(item.target).applyAxisAngle(UP, t * ORBIT_SPEED);
-    obj.position.lerpVectors(item.start, goal, p).addScaledVector(item.bend, 4 * p * (1 - p));
-    // Before its flight a piece is already drifting slowly inward, so nothing waits still.
-    if (p <= 0) obj.position.multiplyScalar(1 + 0.3 * (1 - t / item.delay));
-    obj.position.multiplyScalar(1 - shrink);
-    obj.rotation.copy(item.startRot);
-    obj.rotateOnAxis(item.spinAxis, t * item.spinRate + p * Math.PI * 2);
-    const scale = PIECE_SCALE * (1 - shrink);
-    obj.scale.setScalar(scale);
-    obj.visible = scale > 0.01;
-  }
+  const f = Math.max(0, Math.min(DATA.frames.length - 1, t * DATA.fps));
+  const i0 = Math.floor(f);
+  const i1 = Math.min(DATA.frames.length - 1, i0 + 1);
+  const k = f - i0;
+  // As the leather closes over it, the pile squeezes a little and is gone once it's shut.
+  const tuck = 1 - 0.4 * easeInOutCubic(panels);
+  active.forEach((item, i) => {
+    const a = DATA.frames[i0]![i]!;
+    const b = DATA.frames[i1]![i]!;
+    item.holder.position.set(
+      (a[0]! + (b[0]! - a[0]!) * k) * tuck,
+      (a[1]! + (b[1]! - a[1]!) * k) * tuck,
+      (a[2]! + (b[2]! - a[2]!) * k) * tuck
+    );
+    qa.set(a[3]!, a[4]!, a[5]!, a[6]!);
+    qb.set(b[3]!, b[4]!, b[5]!, b[6]!);
+    item.holder.quaternion.slerpQuaternions(qa, qb, k);
+    item.holder.scale.setScalar(tuck);
+    item.holder.visible = panels < 0.97;
+  });
 }
 
 /** Hides the kit at once (skips and returning visitors). */
 export function collapseActivePieces(active: ActivePiece[]): void {
-  for (const item of active) item.piece.object.visible = false;
+  for (const item of active) item.holder.visible = false;
 }

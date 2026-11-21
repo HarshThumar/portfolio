@@ -10,7 +10,7 @@ import { createOpeningSky } from './opening-sky';
 import { createOpeningClouds } from './opening-clouds';
 import { createBallDrag } from './opening-drag';
 import { OPENING_CENTRE, orbitCamera, stampFacing } from './opening-pose';
-import { STAMP_END, openingPhase } from './opening-timeline';
+import { GATHER_START, STAMP_END, openingPhase } from './opening-timeline';
 
 // docs/03, "Opening": under an overcast Test-match sky the kit gathers into a giant red ball,
 // the seam stitches itself, the gold HT stamp turns to the camera, then Play bowls it down
@@ -58,7 +58,7 @@ export interface OpeningController {
   dispose: () => void;
 }
 
-function createStage(scene: THREE.Scene, aspect: number) {
+function createStage(scene: THREE.Scene) {
   const sky = createOpeningSky(scene);
   const clouds = createOpeningClouds(OPENING_CENTRE);
   const ball = createGiantBall();
@@ -67,10 +67,8 @@ function createStage(scene: THREE.Scene, aspect: number) {
   cluster.position.copy(OPENING_CENTRE);
   scene.add(clouds.group, ball.group, cluster);
 
-  const camPos = new THREE.Vector3();
-  orbitCamera(0, aspect, camPos, new THREE.Vector3());
   const kit = createKitPieces();
-  const pieces = setupActivePieces(cluster, kit, camPos.sub(OPENING_CENTRE));
+  const pieces = setupActivePieces(cluster, kit);
   const drag = createBallDrag();
 
   const dispose = (): void => {
@@ -93,7 +91,7 @@ export function playOpening(params: {
 }): OpeningController {
   const { state, sound, base, onDone } = params;
   document.body.classList.add('opening');
-  const stage = createStage(state.scene, state.camera.aspect);
+  const stage = createStage(state.scene);
   const { sky, clouds, ball, pieces, drag, facing } = stage;
 
   let elapsed = 0;
@@ -144,7 +142,7 @@ export function playOpening(params: {
     if (!isReady) {
       elapsed += dt;
       const ph = openingPhase(elapsed);
-      updateActivePieces(pieces, elapsed, ph.panels);
+      updateActivePieces(pieces, elapsed - GATHER_START, ph.panels);
       ball.setPanels(ph.panels);
       ball.setSeam(ph.seam);
       ball.setStamp(ph.stamp);

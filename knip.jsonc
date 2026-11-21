@@ -3,8 +3,9 @@
   "workspaces": {
     ".": {
       "entry": ["scripts/**/*.mjs"],
-      // Unit tests drive the real physics engine, which is a dependency of the game workspace.
-      "ignoreDependencies": ["@dimforge/rapier3d-compat"]
+      // Unit tests drive the real physics engine and the real kit models, which are
+      // dependencies of the game workspace.
+      "ignoreDependencies": ["@dimforge/rapier3d-compat", "three"]
     },
     "game": {
       "project": ["src/**/*.ts"]

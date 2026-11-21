@@ -96,6 +96,10 @@ Answer `OPTIONS`; return `Access-Control-Allow-Origin` with the exact allowed or
 ## Asset pipeline
 ```
 Blender (.blend in assets-src/) → export GLB → gltf-transform optimize (dedup, prune, weld, quantize)
+
+**Baked animation (built, 22 Nov 2026):** Blender runs headless from a Python script and its result is committed as data the game plays back.
+- `assets-src/opening/kit_flight.py`: the opening's kit assembly. The 26 kit pieces (boxes and spheres sized from `assets-src/opening/kit-bounds.json`) are rigid bodies with no gravity, let go one by one and pulled into the centre by a damped spring field, so they collide and pile up. Every piece's transform per frame (30 fps, 2.8 s) goes to `game/src/opening/kit-flight.json` (~115 KB); `opening-pieces.ts` interpolates it.
+- Re-bake: `npm run bake:opening` (finds Blender through `BLENDER`, then the default Windows install). After changing a kit model: `UPDATE_KIT_BOUNDS=1 npx vitest run tests/unit/kit-flight.test.ts`, then re-bake. The unit test fails while the bake is out of date.
    → meshopt geometry compression → KTX2 textures (ETC1S colour, UASTC normals) → assets/
 ```
 - `npm run assets` runs the pipeline; output is committed or built in CI (decide in M0).

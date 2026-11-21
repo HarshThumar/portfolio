@@ -12,3 +12,5 @@ docs/
 GEMINI.md
 PLAN.md
 .tmp/
+# Baked by Blender (npm run bake:opening), kept compact.
+game/src/opening/kit-flight.json

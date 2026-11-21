@@ -30,7 +30,8 @@
     "prepare": "git config core.hooksPath .githooks || true",
     "facts": "node scripts/generate-worker-facts.mjs",
     "check:release": "node scripts/check-copy.mjs --release",
-    "test:devices": "playwright test"
+    "test:devices": "playwright test",
+    "bake:opening": "node scripts/bake-opening.mjs"
   },
   "devDependencies": {
     "@lhci/cli": "0.16.1",

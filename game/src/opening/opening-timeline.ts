@@ -15,11 +15,13 @@ export interface OpeningPhaseState {
   stamp: number;
 }
 
-export const GATHER_START = 0.3;
-export const GATHER_END = 3.0;
-export const PANELS_END = 3.8;
-export const STITCH_END = 4.6;
-export const STAMP_END = 5.6;
+// The gather plays the baked kit flight (about 2.8 s, see kit-flight.json); the leather starts
+// closing over the pile while it is still settling.
+export const GATHER_START = 0.2;
+export const GATHER_END = 2.2;
+export const PANELS_END = 2.9;
+export const STITCH_END = 3.6;
+export const STAMP_END = 4.5;
 
 export function clamp(v: number, min = 0, max = 1): number {
   return Math.max(min, Math.min(max, v));
@@ -40,14 +42,6 @@ export function easeOutBack(t: number): number {
   const c = clamp(t);
   const k = 1.70158;
   return 1 + (k + 1) * (c - 1) ** 3 + k * (c - 1) ** 2;
-}
-
-/** Normalised, eased progress [0, 1] for one kit piece flying in. */
-export function pieceProgress(t: number, delay: number, duration: number): number {
-  if (duration <= 0) return t >= delay ? 1 : 0;
-  if (t <= delay) return 0;
-  if (t >= delay + duration) return 1;
-  return easeInOutCubic((t - delay) / duration);
 }
 
 function span(t: number, start: number, end: number): number {

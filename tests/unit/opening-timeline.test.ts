@@ -9,8 +9,7 @@ import {
   easeInOutCubic,
   easeOutBack,
   easeOutCubic,
-  openingPhase,
-  pieceProgress
+  openingPhase
 } from '../../game/src/opening/opening-timeline';
 
 describe('opening timeline', () => {
@@ -39,13 +38,6 @@ describe('opening timeline', () => {
     const peak = Math.max(...Array.from({ length: 50 }, (_, i) => easeOutBack(i / 49)));
     expect(peak).toBeGreaterThan(1);
     expect(peak).toBeLessThan(1.15);
-  });
-
-  it('flies each piece only inside its own window', () => {
-    expect(pieceProgress(0.2, 0.5, 1)).toBe(0);
-    expect(pieceProgress(1.5, 0.5, 1)).toBe(1);
-    expect(pieceProgress(1.0, 0.5, 1)).toBeCloseTo(0.5);
-    expect(pieceProgress(0.5, 0.5, 0)).toBe(1);
   });
 
   it('runs the phases in the order of docs/03', () => {
