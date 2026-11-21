@@ -14,30 +14,22 @@ import { createStageCamera } from './loop/stage-camera';
 import { createStageAudio } from './loop/stage-audio';
 import { createStageRender } from './loop/stage-render';
 import { createStageUi } from './loop/stage-ui';
+import { createSharedMaterials } from './world/palette';
+import { createGroundBase } from './world/ground-base';
 import type { GameEvents, GameInstance, GameOptions, GameState } from './types';
 
 export type { GameEvents, GameInstance, GameOptions, GameState };
 
-function createTestScene(scene: THREE.Scene): () => void {
+function setupLighting(scene: THREE.Scene): void {
   scene.background = new THREE.Color(0xf3ead3); // --cream
 
-  const ambientLight = new THREE.AmbientLight(0xfff6da, 1.2); // --flood
+  const ambientLight = new THREE.AmbientLight(0xfff6da, 1.4); // --flood
   scene.add(ambientLight);
 
-  const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
-  dirLight.position.set(10, 20, 10);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 1.6);
+  dirLight.position.set(15, 30, 20);
+  dirLight.castShadow = true;
   scene.add(dirLight);
-
-  const groundGeo = new THREE.PlaneGeometry(80, 80);
-  const groundMat = new THREE.MeshBasicMaterial({ color: 0x4e7a3a }); // --outfield
-  const groundMesh = new THREE.Mesh(groundGeo, groundMat);
-  groundMesh.rotation.x = -Math.PI / 2;
-  scene.add(groundMesh);
-
-  return () => {
-    groundGeo.dispose();
-    groundMat.dispose();
-  };
 }
 
 function createPhysicsWorld(rapier: typeof RAPIER): {
@@ -48,9 +40,7 @@ function createPhysicsWorld(rapier: typeof RAPIER): {
   const world = new rapier.World(gravity);
   const bodies = new Map<string, RAPIER.RigidBody>();
 
-  const groundDesc = rapier.ColliderDesc.cuboid(40, 0.5, 40).setTranslation(0, -0.5, 0);
-  world.createCollider(groundDesc);
-
+  // Dynamic test body for vehicle physics verification
   const bodyDesc = rapier.RigidBodyDesc.dynamic().setTranslation(0, 2, 0);
   const body = world.createRigidBody(bodyDesc);
   const colliderDesc = rapier.ColliderDesc.ball(0.5);
@@ -157,10 +147,13 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
   await RAPIER.init();
   const { world, bodies } = createPhysicsWorld(RAPIER);
   const scene = new THREE.Scene();
-  const disposeScene = createTestScene(scene);
+  setupLighting(scene);
+
+  const materials = createSharedMaterials();
+  const groundBase = createGroundBase(scene, world, RAPIER, materials);
 
   const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 10, 18);
+  camera.position.set(0, 18, 30);
   camera.lookAt(0, 0, 0);
 
   const { renderer, backend } = await createRenderer(canvas);
@@ -209,7 +202,8 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
       cleanupResize();
       cleanupInputs();
       debugController.destroy();
-      disposeScene();
+      groundBase.dispose();
+      materials.dispose();
       renderer.dispose();
       world.free();
       for (const fn of state.disposables) fn();
