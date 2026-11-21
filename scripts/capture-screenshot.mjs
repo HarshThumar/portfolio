@@ -79,6 +79,11 @@ async function main() {
       if (panel) panel.style.transform = 'translateX(-50%) translateY(0)';
     });
     await page.waitForTimeout(600);
+  } else if (action === 'sound') {
+    // Show HUD mute button and toggle state
+    await page.waitForSelector('#hud-mute-btn', { state: 'visible' });
+    await page.click('#hud-mute-btn');
+    await page.waitForTimeout(500);
   } else {
     await page.waitForTimeout(1000);
   }

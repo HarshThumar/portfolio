@@ -1,11 +1,26 @@
-import type { Stage } from '../types';
+import type { GameState, Stage } from '../types';
+import type { SoundManager } from '../audio/audio';
 
-export function createStageAudio(): Stage {
+export function createStageAudio(soundManager: SoundManager): Stage {
+  let wasBraking = false;
+  let wasHonking = false;
+
   return {
     name: 'audio',
     order: 70,
-    update: () => {
-      // Stage 70: M1.8 synchronizes spatial audio listener and vehicle engine pitch
+    update: (state: GameState) => {
+      const speed = state.vehicle?.speed ?? 0;
+      soundManager.updateRollerSpeed(speed);
+
+      if (state.inputs.brake && !wasBraking && speed > 2.0) {
+        soundManager.playBrakeSqueak();
+      }
+      wasBraking = state.inputs.brake;
+
+      if (state.inputs.horn && !wasHonking) {
+        soundManager.playHonk();
+      }
+      wasHonking = state.inputs.horn;
     }
   };
 }

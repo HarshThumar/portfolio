@@ -139,6 +139,7 @@ function createGameDisposer(params: {
   touchControls: { destroy: () => void };
   debugController: { destroy: () => void };
   stampBanner: StampBanner;
+  soundManager: SoundManager;
   interactionCleanup: { dispose: () => void };
   groundBase: { dispose: () => void };
   pavilion: { dispose: () => void };
@@ -156,6 +157,7 @@ function createGameDisposer(params: {
     params.touchControls.destroy();
     params.debugController.destroy();
     params.stampBanner.destroy();
+    params.soundManager.destroy();
     params.interactionCleanup.dispose();
     params.groundBase.dispose();
     params.pavilion.dispose();
@@ -189,6 +191,19 @@ function createWorldEntities(
   return { groundBase, pavilion, scoreboard, vehicle };
 }
 
+function createCamera(): THREE.PerspectiveCamera {
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 10, 20);
+  camera.lookAt(0, 0, 0);
+  return camera;
+}
+
+function resolveDebug(optionsDebug?: boolean): boolean {
+  const isDebugUrl =
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debug');
+  return optionsDebug ?? isDebugUrl;
+}
+
 export async function initGame(options: GameOptions): Promise<GameInstance> {
   const { canvas } = options;
 
@@ -205,14 +220,9 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
   );
   bodies.set('roller', vehicle.body);
 
-  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 10, 20);
-  camera.lookAt(0, 0, 0);
-
+  const camera = createCamera();
   const { renderer, backend } = await createRenderer(canvas);
-  const isDebugUrl =
-    typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debug');
-  const shouldDebug = options.debug ?? isDebugUrl;
+  const shouldDebug = resolveDebug(options.debug);
   const debugController = createDebugPanel(shouldDebug);
   const soundManager = createSoundManager();
   const stampBanner = createStampBanner();
@@ -245,7 +255,12 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
     stampBanner
   );
 
-  const stages = assembleStages(stageInputs, stageInteractions, debugController.update);
+  const stages = assembleStages(
+    stageInputs,
+    stageInteractions,
+    debugController.update,
+    soundManager
+  );
   stageInteractions.addUpdatable(scoreboard.update);
   const loop = createGameLoop(state, stages);
   loop.start();
@@ -258,6 +273,7 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
     touchControls,
     debugController,
     stampBanner,
+    soundManager,
     interactionCleanup,
     groundBase,
     pavilion,

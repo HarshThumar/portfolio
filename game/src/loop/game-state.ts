@@ -3,6 +3,7 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import type { WebGPURenderer } from 'three/webgpu';
 import type { TypedEmitter } from '../events/emitter';
 import type { GameEvents, GameState, Stage } from '../types';
+import type { SoundManager } from '../audio/audio';
 import { createStageVehicle } from './stage-vehicle';
 import { createStagePhysics } from './stage-physics';
 import { createStageInterpolate } from './stage-interpolate';
@@ -15,7 +16,8 @@ import { createStageUi } from './stage-ui';
 export function assembleStages(
   stageInputs: Stage,
   stageInteractions: Stage,
-  updateDebugPanel: (state: GameState) => void
+  updateDebugPanel: (state: GameState) => void,
+  soundManager: SoundManager
 ): Stage[] {
   return [
     stageInputs,
@@ -25,7 +27,7 @@ export function assembleStages(
     stageInteractions,
     createStageWorld(),
     createStageCamera(),
-    createStageAudio(),
+    createStageAudio(soundManager),
     createStageRender(),
     createStageUi(updateDebugPanel)
   ];
