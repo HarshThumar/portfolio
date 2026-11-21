@@ -3,7 +3,9 @@ import * as THREE from 'three/webgpu';
 // The seams of a Test ball (docs/03): a raised main seam round the equator with six rows of
 // stitching, and two quarter seams, one across each hemisphere, at right angles to each other.
 
-const ROW_HEIGHTS = [-0.36, -0.24, -0.12, 0.12, 0.24, 0.36];
+// Three rows each side of the ridge, packed close so each side reads as one strip of stitching
+// with the dark ridge clearly between the two strips.
+const ROW_HEIGHTS = [-0.34, -0.26, -0.18, 0.18, 0.26, 0.34];
 const PER_ROW = 130;
 const MAIN_COUNT = ROW_HEIGHTS.length * PER_ROW;
 const QUARTER_PER_ARC = 56;
@@ -60,14 +62,14 @@ function placeQuarterStitches(mesh: THREE.InstancedMesh, radius: number): void {
 export function createBallSeams(radius: number): BallSeams {
   const group = new THREE.Group();
   const ridgeMat = new THREE.MeshPhysicalMaterial({
-    color: 0x6e1410,
+    color: 0x58100c,
     roughness: 0.5,
     clearcoat: 0.4
   });
   const threadMat = new THREE.MeshStandardMaterial({ color: 0xf1e6cf, roughness: 0.75 });
   const lineMat = new THREE.MeshStandardMaterial({ color: 0x4a0d0a, roughness: 0.6 });
 
-  const ridgeGeo = new THREE.TorusGeometry(radius - 0.02, 0.1, 10, 160);
+  const ridgeGeo = new THREE.TorusGeometry(radius - 0.01, 0.1, 10, 160);
   ridgeGeo.rotateX(Math.PI / 2);
   const ridge = new THREE.Mesh(ridgeGeo, ridgeMat);
 

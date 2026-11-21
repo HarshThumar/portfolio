@@ -39,17 +39,11 @@ const worldBasis = new THREE.Matrix4();
 const n = new THREE.Vector3();
 const up = new THREE.Vector3();
 const right = new THREE.Vector3();
-const TILT = 0.14;
-const TIP = 0.42;
 
-/** The ball's rotation that shows the stamp to the camera, upright with a slight jaunty tilt. */
+/** The ball's rotation that shows the stamp to the camera, dead centre and upright. */
 export function stampFacing(cameraPos: THREE.Vector3, out: THREE.Quaternion): THREE.Quaternion {
   n.subVectors(cameraPos, OPENING_CENTRE).normalize();
   up.set(0, 1, 0).addScaledVector(n, -n.y).normalize();
-  // Aim the stamp a little above the camera, so the main seam below it rolls into view.
-  n.addScaledVector(up, TIP).normalize();
-  up.addScaledVector(n, -up.dot(n)).normalize();
-  up.applyAxisAngle(n, TILT);
   right.crossVectors(up, n);
   worldBasis.makeBasis(right, up, n).multiply(localBasisT);
   return out.setFromRotationMatrix(worldBasis);

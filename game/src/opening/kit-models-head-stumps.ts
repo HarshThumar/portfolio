@@ -47,6 +47,7 @@ export interface HeadStumpsGeometries {
   bail: THREE.CapsuleGeometry;
   smallBall: THREE.SphereGeometry;
   smallBallSeam: THREE.TorusGeometry;
+  smallBallStitch: THREE.TorusGeometry;
   dispose: () => void;
 }
 
@@ -74,7 +75,9 @@ export function createHeadStumpsGeometries(): HeadStumpsGeometries {
   const stump = new THREE.CapsuleGeometry(0.045, 1.8, 4, 8);
   const bail = new THREE.CapsuleGeometry(0.025, 0.22, 4, 8);
   const smallBall = new THREE.SphereGeometry(0.42, 16, 16);
-  const smallBallSeam = new THREE.TorusGeometry(0.423, 0.014, 6, 24);
+  // The seam: a low leather ridge with a strip of stitching either side of it, like a real ball.
+  const smallBallSeam = new THREE.TorusGeometry(0.42, 0.018, 6, 32);
+  const smallBallStitch = new THREE.TorusGeometry(0.418, 0.011, 6, 32);
 
   return {
     helmetShell,
@@ -86,6 +89,7 @@ export function createHeadStumpsGeometries(): HeadStumpsGeometries {
     bail,
     smallBall,
     smallBallSeam,
+    smallBallStitch,
     dispose: () => {
       helmetShell.dispose();
       helmetGrilleBar.dispose();
@@ -96,6 +100,7 @@ export function createHeadStumpsGeometries(): HeadStumpsGeometries {
       bail.dispose();
       smallBall.dispose();
       smallBallSeam.dispose();
+      smallBallStitch.dispose();
     }
   };
 }
@@ -181,9 +186,15 @@ export function buildSmallBallObject(
   const ball = new THREE.Mesh(geo.smallBall, mat.leather);
   group.add(ball);
 
-  const seam = new THREE.Mesh(geo.smallBallSeam, mat.cream);
-  seam.rotation.x = Math.PI / 2;
-  group.add(seam);
+  const ridge = new THREE.Mesh(geo.smallBallSeam, mat.leather);
+  ridge.rotation.x = Math.PI / 2;
+  group.add(ridge);
+  for (const y of [-0.055, 0.055]) {
+    const strip = new THREE.Mesh(geo.smallBallStitch, mat.cream);
+    strip.rotation.x = Math.PI / 2;
+    strip.position.y = y;
+    group.add(strip);
+  }
 
   return group;
 }
