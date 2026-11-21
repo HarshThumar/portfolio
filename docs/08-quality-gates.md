@@ -23,8 +23,8 @@ A task or milestone is "done" only when every gate that applies passes. `npm run
 | Lighthouse | Lighthouse CI | Scorecard view < 95 in any category; 3D page Accessibility < 90 |
 
 ### E2E flows (Playwright)
-1. Load `/` → the loading screen appears → "Walk out to bat" is visible and focusable.
-2. Click it → the map appears → keyboard to Lord's → Enter → the ground loads and the URL is `/ground/lords/`.
+1. Load `/` → the loading screen appears → the kit forms the ball → the play button is visible and focusable; any key skips the opening.
+2. Click it → the hub loads → drive onto the Lord's mat (or pick Lord's in the map list) → the hop-in plays and the URL is `/ground/lords/`; leaving returns to the hub.
 3. Direct-load each `/ground/<slug>/`.
 4. Open the info post panel → the source links are present and valid.
 5. `/scorecard/` with JavaScript disabled shows every project.

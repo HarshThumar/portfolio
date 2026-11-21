@@ -1,7 +1,7 @@
 # 01 · Vision: "The Test Tour"
 
 ## One line
-Harsh Thumar's portfolio is a cricket tour. You walk out to bat at his home ground in Ahmedabad, then travel to famous grounds around the world. Each ground holds one of his projects, and you drive a groundsman's pitch roller around it to explore.
+Harsh Thumar's portfolio is a cricket tour. Cricket kit snaps together into a giant red ball, the ball is bowled into his home ground in Ahmedabad, and that stadium becomes the hub: small models of nine famous grounds stand around its outfield, one per project. Drive the groundsman's pitch roller onto one and you hop into that ground, full size. (Structure changed 21 Nov 2026; see DECISIONS.md.)
 
 ## Who it is for
 A general audience: developers, recruiters, founders, cricket fans, LinkedIn followers. Nobody should need to know what MCP or Tamarin is to enjoy it. Anyone curious can go deeper.
@@ -18,8 +18,8 @@ Every ground ends with a way to do one of these. The finale (back home in Ahmeda
 - Test cricket is the long format. It rewards patience and doing things properly. That matches how Harsh works: every claim in his credit memos has to cite its source, and his Tamarin models check a protocol 376 ways.
 
 ## The two phases (the structure Harsh asked for)
-1. **The walkout (intro).** A dark stadium. Floodlights switch on one at a time. His name appears. One button: **"Walk out to bat"**. The click also unlocks audio (browsers block sound until a user gesture).
-2. **The tour (main experience).** A vintage tour map, then a 3D ground per project, driven with the roller.
+1. **The opening.** Cricket kit (bats, pads, gloves, helmet, stumps) flies together into one giant red leather ball. His name and one line appear. One button to play; the click also turns sound on. The ball is bowled into the Ahmedabad pitch and the camera follows it in.
+2. **The tour (main experience).** The Ahmedabad hub with nine ground models around the outfield; drive to one and hop in to a full 3D ground per project, driven with the roller.
 
 ## The feeling we're after
 - **Warm, crafted, a little funny.** Closer to a hand-made toy than a tech demo.

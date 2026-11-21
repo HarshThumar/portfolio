@@ -10,7 +10,7 @@ Researched 20 Nov 2026 (versions read from the npm registry that day). **Before 
 | `three` | 0.187.0 (pin exact) | 3D. Use `three/webgpu` + TSL; it falls back to WebGL2 automatically. Never mix WebGLRenderer-only addons with WebGPURenderer. |
 | `@dimforge/rapier3d-compat` | 0.21.0 | Physics. The `-compat` build inlines its WASM, so no wasm plugin or MIME issues on GitHub Pages. |
 | `howler` | 2.2.4 | Sound: sprites, unlock on click, mobile quirks, spatial panning |
-| `gsap` | 3.15.x | Scripted sequences: the walkout, travel on the map, panel entrances |
+| `gsap` | 3.15.x | Scripted sequences: the kit-to-ball opening, the hop-in dive, panel entrances |
 | `@gltf-transform/cli` | 4.5.1 (dev) | Asset optimisation at build time |
 | `typescript` | 5.x (dev) | Type feedback for the builder |
 | `wrangler` | ≥ 4.36 (worker only) | Cloudflare Worker deploy; needed for the Rate Limiting binding |
@@ -122,7 +122,7 @@ Loading order: HTML loading screen (instant) → intro scene → on the click: R
 ## Accessibility and fallbacks
 - WebGL2/WebGPU detection; no support or a very weak device → `/scorecard/` with a friendly line.
 - "Skip to Scorecard view" link is the first focusable element on every page.
-- Keyboard: WASD/arrows drive, Space honks, Esc opens the menu, Tab reaches every HUD control, Enter on the map travels.
+- Keyboard: WASD/arrows drive, Space honks, Esc opens the menu, Tab reaches every HUD control, Enter in the map list travels.
 - `prefers-reduced-motion`: no camera fly-throughs or shake, fewer particles, instant transitions.
 - The canvas has an `aria-label`; all canvas information exists as text on the Scorecard view and in the project panel (DOM).
 - Captions: every voice-like sound (HOWZAT, the commentator) has a text equivalent.

@@ -1,6 +1,6 @@
 # The Test Tour: Harsh Thumar's portfolio
 
-A drivable 3D cricket world. You walk out to bat at the home ground in Ahmedabad, then tour famous grounds around the world; each ground is one project, explored by driving a groundsman's pitch roller. A plain "Scorecard view" carries everything for people in a hurry.
+A drivable 3D cricket world in a handmade-miniature style. Cricket kit snaps together into a giant red ball, which is bowled into Harsh's home ground in Ahmedabad. That stadium is the hub: models of nine famous grounds stand around its outfield, one per project, and you drive a groundsman's pitch roller onto one to hop in. A plain "Scorecard view" carries everything for people in a hurry.
 
 Plan written 20 Nov 2026. Builder: Gemini. Reviewer: Claude. Owner: Harsh.
 
@@ -21,14 +21,15 @@ Plan written 20 Nov 2026. Builder: Gemini. Reviewer: Claude. Owner: Harsh.
 ## Milestones at a glance
 | | Milestone | Weeks | Status |
 |---|---|---|---|
-| M0 | Foundations: tooling, CI, facts, font | 1 | not started |
-| M1 | Vertical slice: Lord's, fully finished | 2–3 | not started |
-| M2 | Walkout intro + tour map | 4 | not started |
-| M3 | The other nine grounds + finale | 5–7 | not started |
-| M4 | Scorecard view, 404 | 7 | not started |
-| M5 | Worker: commentary box + cheers | 8 | not started |
-| M6 | Polish and sound mix | 9 | not started |
-| M7 | QA and launch | 9–10 | not started |
+| M0 | Foundations: tooling, CI, facts, font | 1 | done (reviewed 21 Nov) |
+| M1 | Lord's prototype | 2–3 | done, superseded by M1B (reviewed 21 Nov) |
+| M1B | Hub slice: Ahmedabad + hop into Lord's, miniature look (Claude) | 3–4 | in progress |
+| M2 | Opening (kit → ball → bowled in), map list, routing | 5 | not started |
+| M3 | The other eight grounds + finale | 6–8 | not started |
+| M4 | Scorecard view, 404 | 8 | not started |
+| M5 | Worker: commentary box + cheers | 9 | not started |
+| M6 | Polish and sound mix | 10 | not started |
+| M7 | QA and launch | 10–11 | not started |
 
 ## The 10 grounds
-Home: Narendra Modi Stadium (about + finale) · Lord's: mcp-auth-tamarin · Wankhede: credit-appraisal platform · Galle: content engine · The Oval: data lake · Sharjah: load-test fix · Eden Gardens: IPL Auction Arena (in development) · Newlands: GAIA agent · MCG: Agent-E · Dharamsala: live cricket product (backend, frontend, broadcast overlay, deployment).
+Hub: Narendra Modi Stadium (about, the nine ground models, finale) · Lord's: mcp-auth-tamarin · Wankhede: credit-appraisal platform · Galle: content engine · The Oval: data lake · Sharjah: load-test fix · Eden Gardens: IPL Auction Arena (in development) · Newlands: GAIA agent · MCG: Agent-E · Dharamsala: live cricket product (backend, frontend, broadcast overlay, deployment).

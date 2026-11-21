@@ -3,48 +3,51 @@
 Everything a visitor sees, touches and hears. Facts come only from [02-content-bible.md](02-content-bible.md). Look and sound rules are in [04-art-and-sound.md](04-art-and-sound.md).
 
 ## The flow
+(Changed 21 Nov 2026, Harsh: the home ground is the hub; the tour map is gone.)
 
 ```
-[Phase 1: The walkout]  →  [Tour map]  ⇄  [Ground scene × 10]  →  [Finale at home]
-          │                     │                    │
+[Opening: the kit becomes a ball]  →  [Hub: Narendra Modi Stadium, Ahmedabad]  ⇄  [Project ground × 9]
+                                             │  drive to a ground model, hop in; drive out, hop back
           └──────── "Scorecard view" (plain page) is reachable from every screen ────────┘
 ```
 
 URLs (each must be shareable and load directly):
-- `/` intro → map
-- `/ground/<slug>` a ground, e.g. `/ground/lords`
-- `/scorecard` the plain, accessible page with everything
+- `/` opening → hub
+- `/ground/<slug>/` a project ground, e.g. `/ground/lords/` (loads straight in, skips the opening)
+- `/scorecard/` the plain, accessible page with everything
 
 ---
 
-## Phase 1: The walkout (intro)
+## Opening: the kit becomes a ball
 
-| Time | What happens | Sound (only after the click, see note) |
+Inspired by the *idea* of a world assembling itself (as in messenger.abeto.co), done our way, nothing copied.
+
+| Time | What happens | Sound (only after the click) |
 |---|---|---|
-| 0 s | Black screen. A small, slow loading indicator: a **pitch roller rolling left to right** along a white crease line. Shows real loading progress. | none (no audio before a click) |
-| loaded | Silhouette of a stadium bowl at night, seen from the pitch. | — |
-| +0.5 s | Floodlight towers switch on **one at a time**, four towers, ~350 ms apart. Light spills onto the grass. | — |
-| +2 s | On the big screen: **HARSH THUMAR**, then one line under it: "I build AI agents that work with real money and data." | — |
-| +2.5 s | One button: **Walk out to bat**. Under it, small: "Sound on · or open the Scorecard view". | — |
-| click | Each floodlight *clunk* plays in quick succession, then a crowd swell. The camera moves down the players' tunnel and out onto the grass, then lifts up into the tour map. ~3 s. Skippable with any key or tap. | clunks, footsteps on concrete, crowd roar |
+| 0 s | Cream screen. A small loading indicator: the **roller rolling along a crease line**, showing real progress. | none |
+| loaded | Cricket kit floats in from every side, in the miniature style: bats, pads, gloves, a helmet, stumps and bails, a cap, a few balls. | — |
+| +0.5–3 s | The pieces fly together and **snap into one giant red leather ball**, seam last. The seam stitches itself closed. | — |
+| +3 s | The ball turns slowly. Under it: **HARSH THUMAR**, the one-line positioning from 02, and one button: **[[COPY: play button]]**. Small: sound on · Scorecard view. | — |
+| click | The ball is **bowled**: it drops and pitches into the centre of the Ahmedabad pitch, the camera follows it down, and the visitor lands in the hub, sitting on the roller. ~2.5 s. | whoosh, leather-on-turf thud, crowd roar |
 
-Notes:
-- Browsers block audio until a user gesture. The button is that gesture. Also offer a visible **mute** toggle at all times after.
-- `prefers-reduced-motion`: no camera fly-through; fade straight to the map.
-- If WebGL is not available, send the visitor to `/scorecard` with a one-line explanation.
+Rules:
+- Skippable with any key or tap at any point. Returning visitors (localStorage, try/catch) skip straight to the button.
+- `prefers-reduced-motion`: the ball is already formed; the click fades to the hub.
+- No WebGL: go to `/scorecard/` with one line of explanation.
+- The kit is generic equipment: no brand names, no logos, no team colours.
 
 ---
 
-## The tour map
+## The hub: Narendra Modi Stadium, Ahmedabad
 
-A vintage cricket-tour poster: a cream paper world map with a hand-drawn coastline, grounds marked as small stamps, and a dotted route between them in red ink. Think of a 1950s touring-team poster, drawn for this site, not a copied image.
+The home ground is the one place the visitor always returns to. It is about Harsh and it holds the tour.
 
-- **Click or tap a ground** → a small team bus (in India) or a propeller plane (abroad) travels the dotted line, ~1.5 s, then the ground scene loads.
-- Visited grounds get a **red "VISITED" stamp** with a thunk sound.
-- A **tour card** in the corner shows stamps collected, e.g. "4 / 10 grounds".
-- Hovering a ground shows a small label: ground name and project title in one line.
-- Keyboard: arrow keys move between grounds, Enter travels.
-- Always visible: mute, Scorecard view, LinkedIn.
+- **The bowl:** the huge round stadium with its ring of floodlights on the roof edge, in the miniature style.
+- **The centre pitch is "about me":** the giant scoreboard shows Harsh's name and links; a contact board stands by the pavilion end (LinkedIn, email).
+- **The tour, inside the field:** around the outfield stand **nine small models of the project grounds**, each on a timber stand with a brass plaque (ground name, project title). Each model shows that ground's landmark: Lord's pavilion, the Oval gas holders, Galle fort, Table Mountain, and so on (table below).
+- **Hopping in:** in front of each model is a mat. Drive onto it and the camera **dives into the model**; the visitor comes out full-size inside that ground. Leaving a ground (a "back to Ahmedabad" sign by its gate, or the HUD) reverses it: you rise out of the model in the hub.
+- Visited models get a small red **VISITED** stamp on the plaque; a tour card counts "N / 9". All nine visited → the finale in the hub (standing ovation, fireworks, closing board with LinkedIn and email).
+- A small **map button** in the HUD opens a plain 2D list of the nine grounds for quick travel and accessibility. It is not the main way around.
 
 ---
 
@@ -72,7 +75,7 @@ A paper "scorecard" slides up from the bottom (not a modal over a dark overlay).
 2. Two or three plain sentences: what it is and why it matters, in Harsh's voice.
 3. The numbers, each with a **source link** (repo, CI run, live demo, or "company project, numbers from internal tests").
 4. Links: repo / live demo (where one exists).
-5. "Next ground →" and "Back to the map".
+5. "Next ground →" and "Back to Ahmedabad".
 
 ### Shared interactions and easter eggs
 | Trigger | Result |
@@ -94,7 +97,7 @@ The sky follows **real Ahmedabad time** (Asia/Kolkata): day from 06:30 to 18:30,
 
 Ten grounds. Ground names and building shapes are tributes. **No official logos** of BCCI, ICC, IPL, any team or any ground authority. No sponsor signage, no real players, no team kits or colour schemes, no copied photos (model from your own references). Every building is a simplified low-poly interpretation in our own palette. The footer of every page carries: "Unofficial fan tribute. Not affiliated with or endorsed by BCCI, ICC, IPL or any stadium."
 
-| # | Ground | Landmark to model | Project | Why it fits (use this line on the map label or panel) | Scoreboard |
+| # | Ground | Landmark to model | Project | Why it fits (use this line on the plaque or panel) | Scoreboard |
 |---|---|---|---|---|---|
 | 0 | **Narendra Modi Stadium, Ahmedabad** (home) | The huge bowl and its ring of floodlights | **Home:** intro, about Harsh, finale, contact | "The world's biggest cricket stadium, in my own city." | `HOME · AHMEDABAD` |
 | 1 | **Lord's, London** | The Victorian pavilion with its balcony; an honours board in the Long Room | **P1 mcp-auth-tamarin** | Lord's keeps the Laws of Cricket. This project checks the rules AI agents follow. | `CHECKS 376 · MODELS 9 · REDISCOVERED 3` |
@@ -150,4 +153,4 @@ The plain, fast, accessible version of the whole site, and the one recruiters wi
 - Linked from every screen and from the intro.
 
 ## 404
-A broken stump and one line: **"Bowled. This page is out."** plus a link back to the map.
+A broken stump and one line: **"Bowled. This page is out."** plus a link back to the Ahmedabad hub.

@@ -85,7 +85,7 @@ delve, tapestry, pivotal, underscore, showcase, intricate, testament, leverage, 
 
 ## Human-made techniques we use on purpose
 1. A decisive type pairing with one unusual display face.
-2. Hand-drawn elements (map, stamps, icons), ideally Harsh's own handwriting for the map labels.
+2. Hand-drawn elements (plaques, stamps, icons), ideally Harsh's own handwriting for the plaque labels.
 3. Harsh's own voice in every line of copy, signed off by him.
 4. Deliberate variation in scale and spacing.
 5. Authored detail: our own sounds, easter eggs, physics, designed loading/error states.

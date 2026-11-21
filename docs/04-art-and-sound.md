@@ -13,7 +13,7 @@ The goal is "a hand-made cricket toy in an old touring-team poster", not "a tech
 | `--pitch` | `#C9B27C` | The 22-yard strip, sand |
 | `--willow` | `#D8B87A` | Bats, wooden boards, the roller seat |
 | `--timber` | `#6B4A2B` | Pavilions, scoreboard frames, honours boards |
-| `--leather` | `#A3271F` | **The one accent.** The red ball, red-ink route on the map, stamps, links, focus rings |
+| `--leather` | `#A3271F` | **The one accent.** The red ball, stamps on the ground plaques, links, focus rings |
 | `--night` | `#0E1A24` | Night sky |
 | `--flood` | `#FFF6DA` | Floodlight glow |
 
@@ -30,14 +30,25 @@ Rules:
 - Banned fonts: Inter, Roboto, Arial, Open Sans, Lato, Poppins, Montserrat, Space Grotesk, Bebas Neue, system-ui stacks as the visible font.
 - Scale: big contrast. The ground name on a panel is ~3x the body size. Use weights at the extremes (400 vs 800+), nothing in between for headlines.
 
-## 3D style
-- **Low-poly, flat-shaded with baked soft lighting.** Chunky, slightly toy-like proportions (the roller is a bit too big, the stumps a bit too thick). Nothing photoreal.
-- One shared **palette texture** (a small image of colour swatches from the table above); every model's UVs point into it. One material for most of the scene, few draw calls.
-- Lighting baked in Blender into a lightmap for static parts (stands, landmarks, pavilion). One real-time directional light only for the roller and dynamic objects' shadows.
-- Outlines: a subtle ink outline on landmarks and the roller (inverted-hull or post effect), to tie the 3D to the hand-drawn map.
-- Crowd: instanced low-poly figures in cream and muted colours, 3–4 poses, animated by a shader (bobbing, waving). No real players, no team kits.
-- Landmarks: each is the "hero" of its ground and gets the most modelling care. Simplified but instantly recognisable silhouettes.
-- Small imperfections on purpose: slightly uneven boundary boards, a hand-painted look on the scoreboards, worn patches on the pitch.
+## 3D style: a handmade miniature
+(Changed 21 Nov 2026 after the first slice looked "bogus and too simple".)
+
+The whole world is **a beautifully made tabletop model of a cricket ground**, the kind a collector builds: soft light, rounded edges, little painted people. Simple shapes are fine; *careless* shapes are not. Not photoreal (that reads as a cheap mobile game in a browser).
+
+What makes it read as crafted, in order of impact:
+1. **Real light, baked.** Soft sun shadows and ambient occlusion (the soft darkening where things meet) baked into lightmaps in Blender. One real-time light only for the roller and moving things. Without this everything looks pasted on.
+2. **Modelled, not primitive.** Every object is modelled in Blender (by script or by hand): bevelled edges, trims, railings, windows, steps, seats. No raw boxes or cylinders on screen.
+3. **A real crowd.** Little people with heads and arms, 3–4 poses, a few body shapes, muted palette clothing; animated in a shader (bob, wave, Mexican wave). Not sticks.
+4. **Sky and atmosphere.** A soft gradient sky with a few clouds, light haze, and a low city silhouette behind the bowl; at night, floodlight glow.
+5. **Grass and pitch with texture.** Mowing stripes, slight colour noise, a worn crease area, a sheen on the pitch.
+6. **The cricket things that make it a ground.** Sight screens, floodlight towers, boundary boards (no sponsors), the scoreboard, covers, groundstaff, umpires, the players' gate.
+7. **Miniature camera feel.** Slightly high camera, a gentle tilt-shift blur at the top and bottom of the screen, warm colour grade.
+
+Technical rules:
+- One shared **palette texture** plus baked lightmaps; few materials, few draw calls.
+- A subtle ink outline on the hero pieces (landmarks, roller) ties the 3D to the paper UI.
+- Small imperfections on purpose: uneven boundary boards, worn patches, hand-painted scoreboards.
+- No real players, no logos, no sponsors, no team kits.
 
 ## UI style
 - Paper, not glass. Panels look like printed scorecards, tour tickets and luggage tags: cream paper, ink rules, a little paper grain, sharp corners or one small radius (4 px) used everywhere.
@@ -50,7 +61,7 @@ Rules:
   - **Sound on interaction**, with a global mute.
 
 ## Motion
-- One orchestrated sequence per moment (the walkout, arriving at a ground, opening a panel). Not "everything fades in".
+- One orchestrated sequence per moment (the kit becoming a ball, hopping into a ground, opening a panel). Not "everything fades in".
 - Spring physics for UI (panels, stamps). Ease curves tuned by hand.
 - The camera follows the roller with a soft lag and a slight look-ahead in the drive direction. No shake except on a stump hit (and none with reduced motion).
 
@@ -66,7 +77,7 @@ Sound is half the experience. Every sound is short, recorded or synthesised for 
 | Cheer button | 6 escalating cheer variants; the 6th is an "over completed" roar |
 
 Rules:
-- Nothing plays before the "Walk out to bat" click.
+- Nothing plays before the first click (the play button in the opening).
 - Global mute in the HUD; remember the choice per visitor (localStorage, wrapped in try/catch).
 - Random variants (2–4 per sound) and slight pitch randomisation so repeats don't sound robotic.
 - Spatial: ground sounds pan and fade with distance from the roller.

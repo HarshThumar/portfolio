@@ -2,6 +2,7 @@
 
 **Who does what**
 - **Gemini (builder):** writes the code and Blender scripts, one task at a time, following [GEMINI.md](../GEMINI.md).
+- **Exception (21 Nov 2026):** Claude builds M1B, the hub slice, because it sets the look and structure everything else copies.
 - **Claude (reviewer):** reviews each milestone against [06-anti-slop.md](06-anti-slop.md) and [08-quality-gates.md](08-quality-gates.md) before it is marked done.
 - **Harsh (owner):** writes and signs off all copy, signs off look, feel and sound at each checkpoint, makes every decision marked *Harsh decides*.
 
@@ -26,41 +27,42 @@
 
 **Checkpoint M0:** tooling works, Harsh picked the font, `grounds.json` facts verified against 02.
 
-## M1 · Vertical slice: one ground, fully finished (weeks 2–3)
-The point: prove the whole feel on **one** ground (Lord's) before building ten.
+## M1 · Lord's prototype (done, superseded)
+Built by Gemini, reviewed and fixed by Claude on 21 Nov 2026 (game loop, physics, roller driving, Lord's scene, panel, sound, crowd, day/night). Harsh's verdict on the preview: it works but looks "bogus and too simple". Two decisions followed (see DECISIONS.md): the **Ahmedabad hub** replaces the tour map, and the art direction becomes the **handmade miniature** (docs/04). The code is kept and becomes the base for everything below.
+
+## M1B · Hub slice: Ahmedabad + one hop-in (Claude builds this; it sets the template)
+The point: prove the new look and the hub on one real path (hub → Lord's → hub) before building anything wide.
 | Id | Task | Done when |
 |---|---|---|
-| M1.1 | Game loop skeleton with the numbered stages; fixed-step Rapier with interpolation; debug panel behind `?debug`. | Debug panel shows fps, draw calls, triangles, bodies |
-| M1.2 | Shared ground base: oval field with mowing stripes, pitch, creases, rope, sight screens, stands shell. Procedural in code or Blender script, palette texture. | Screenshot matches the art direction; ≤ 60 draw calls |
-| M1.3 | The roller: model, Rapier body, heavy tuning, camera follow with look-ahead, keyboard + touch joystick + click-to-drive. | **Harsh drives it and says it feels heavy and fun** |
-| M1.4 | Stumps (knockable), boundary rope (SIX trigger), info post (bell + panel). | All three work, with sounds |
-| M1.5 | Lord's landmark: pavilion silhouette + Long Room honours board moment. | Recognisable as Lord's to someone who knows cricket, with no logos |
-| M1.6 | Manual scoreboard with flipping numbers from `grounds.json`. | Numbers match 02 |
-| M1.7 | Project panel (DOM, paper style) for P1, with source links. | Keyboard and screen reader can read it |
-| M1.8 | Sound pass for the slice: roller, cricket sounds, UI, ambience; Howler unlock on first click; global mute. | Nothing plays before a click; mute persists |
-| M1.9 | Crowd (instanced, shader-animated) + Mexican wave following the roller. | Holds 60 fps desktop with the crowd on |
-| M1.10 | Day/night by Ahmedabad time + manual toggle; floodlights at night. | Both look intentional, not "dark mode" |
+| M1B.1 | Scene system: a hub scene and ground scenes that load and dispose cleanly; the roller and HUD carry over; URL follows the scene. | Hub → ground → hub 20 times with no memory growth |
+| M1B.2 | Miniature look, step 1 (code): soft real-time sun shadow for nearby objects, sky gradient with haze, warm grade, higher camera, textured grass and pitch. | Before/after screenshots; Harsh says it no longer looks "bogus" |
+| M1B.3 | Ahmedabad bowl: round multi-tier stadium, roof ring with floodlights, stairways and seat rows, players' gate, sight screens, boundary boards, scoreboard (name and links). | Recognisable as the Ahmedabad stadium silhouette |
+| M1B.4 | Real crowd: little people (head, arms, 3–4 poses), shader-animated, Mexican wave. | ≥ 2,000 people at 60 fps desktop |
+| M1B.5 | Ground models: nine timber stands with plaques around the outfield; Lord's gets its pavilion model, the rest a simple ground model until M3. | Plaques read the ground and project title from grounds.json |
+| M1B.6 | Hop-in: drive onto a mat, camera dives into the model, the ground loads full size; leaving reverses it. Reduced motion: crossfade. | Feels like one continuous world; URL becomes /ground/lords/ |
+| M1B.7 | Blender pipeline for hero models (bowl pieces, Lord's pavilion, roller, people): scripts in `assets-src/`, baked AO/lightmaps, GLB + meshopt + KTX2. | One baked model in the scene within budget |
 
-**Checkpoint M1 (the big one):** a 30-second clip of Lord's. Claude runs the anti-slop review; Harsh signs off feel, look and sound. If the slice doesn't feel great, fix it here. Do not start M2 until it does.
+**Checkpoint M1B:** Harsh drives hub → Lord's → hub on the preview and signs off the look and feel.
 
-## M2 · The walkout intro and the tour map (week 4)
+## M2 · The opening and travel polish (Gemini, following the M1B template)
 | Id | Task | Done when |
 |---|---|---|
-| M2.1 | HTML loading screen (the roller on the crease) with real progress. | Visible within 100 ms of first paint |
-| M2.2 | Intro scene: home stadium at night, floodlights one by one, name on the big screen, "Walk out to bat" button, Scorecard link. | Matches the timing table in 03 |
-| M2.3 | The walkout sequence (tunnel → grass → up to the map), skippable, reduced-motion version. | Skippable with any key; reduced motion fades |
-| M2.4 | Tour map: hand-drawn paper map, ground stamps, red route, bus/plane travel animation, VISITED stamps, tour card. | Keyboard navigable; travel updates the URL |
-| M2.5 | Routing: `/ground/<slug>/` pages load straight into that ground; back/forward work. | Every ground URL works as a direct link |
+| M2.1 | Loading screen (the roller on a crease) with real progress. | Visible within 100 ms of first paint |
+| M2.2 | Kit models: bat, pad, glove, helmet, stumps, bails, cap, ball (generic, no brands). | Each reads at a glance |
+| M2.3 | The opening: kit flies together into the giant ball, seam stitches, name + positioning + play button; skippable; returning visitors skip. | Matches the timing table in 03 |
+| M2.4 | The bowl-in: the ball is bowled into the Ahmedabad pitch, camera follows, the hub takes over. Reduced motion: fade. | No visible cut between opening and hub |
+| M2.5 | Map list (HUD), VISITED stamps on plaques, tour card "N / 9". | Keyboard navigable; travel updates the URL |
+| M2.6 | Routing: `/ground/<slug>/` loads straight into that ground; back/forward work. | Every ground URL works as a direct link |
 
 **Checkpoint M2:** Harsh watches a first-time visitor (a friend) use it without help. Note every moment they hesitate.
 
-## M3 · The other nine grounds (weeks 5–7)
-One task per ground: landmark, dressing, ambience, scoreboard values, panel, and its one special moment from 03. Build in this order (most important first): Home (Narendra Modi) → Wankhede → Eden Gardens → The Oval → Galle → Sharjah → Newlands → MCG → Dharamsala.
+## M3 · The other eight grounds and the finale
+One task per ground: full-size scene (landmark, dressing, ambience, scoreboard, panel, its special moment from 03) and its miniature model for the hub. Order: Wankhede → Eden Gardens → The Oval → Galle → Sharjah → Newlands → MCG → Dharamsala.
 | Id | Task | Done when (each ground) |
 |---|---|---|
-| M3.1–M3.9 | Ground *N* | Landmark recognisable; special moment works; ≤ 3 MB for the ground; numbers match 02; clip saved |
-| M3.10 | Finale: all 10 visited → standing ovation, fireworks, closing panel with LinkedIn and email | Triggers once; tour card persists in localStorage (try/catch) |
-| M3.11 | Shared easter eggs: rain delay, dog, honk wave, Spidercam view | Each works on every ground |
+| M3.1–M3.8 | Ground *N* | Landmark recognisable; special moment works; ≤ 3 MB for the ground; numbers match 02; clip saved |
+| M3.9 | Finale in the hub: all nine visited → standing ovation, fireworks, closing board with LinkedIn and email | Triggers once; tour card persists in localStorage (try/catch) |
+| M3.10 | Shared easter eggs: rain delay, dog, honk wave, Spidercam view | Each works on every ground |
 
 **Checkpoint M3:** review in batches of three grounds, so problems are caught early.
 
