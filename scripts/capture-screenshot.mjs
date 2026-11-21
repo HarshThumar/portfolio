@@ -63,6 +63,15 @@ async function main() {
       await advisoryRow.click();
       await page.waitForTimeout(500);
     }
+  } else if (action === 'scoreboard') {
+    // Turn left and drive towards the manual scoreboard at (-34, -10)
+    await page.keyboard.down('KeyA');
+    await page.keyboard.down('KeyW');
+    await page.waitForTimeout(2800);
+    await page.keyboard.up('KeyA');
+    await page.waitForTimeout(1200);
+    await page.keyboard.up('KeyW');
+    await page.waitForTimeout(1000);
   } else {
     await page.waitForTimeout(1000);
   }
