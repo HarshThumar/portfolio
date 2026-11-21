@@ -48,12 +48,30 @@ interface GameDebug {
   toggle: () => void;
 }
 
+export interface VehicleState {
+  body: RAPIER.RigidBody;
+  model: {
+    group: THREE.Group;
+    frontDrum: THREE.Mesh;
+    rearDrum: THREE.Mesh;
+    steeringWheel: THREE.Mesh;
+    dispose: () => void;
+  };
+  speed: number;
+  driveTarget?: { x: number; z: number } | null;
+  previousPosition: THREE.Vector3;
+  previousRotation: THREE.Quaternion;
+  currentPosition: THREE.Vector3;
+  currentRotation: THREE.Quaternion;
+}
+
 export interface GameState {
   canvas: HTMLCanvasElement;
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
   renderer: WebGPURenderer;
   physics: GamePhysics;
+  vehicle?: VehicleState;
   time: GameTime;
   inputs: GameInputs;
   perf: GamePerf;

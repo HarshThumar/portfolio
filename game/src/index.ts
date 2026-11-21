@@ -16,9 +16,11 @@ import { createStageRender } from './loop/stage-render';
 import { createStageUi } from './loop/stage-ui';
 import { createSharedMaterials } from './world/palette';
 import { createGroundBase } from './world/ground-base';
-import type { GameEvents, GameInstance, GameOptions, GameState } from './types';
+import { createRoller } from './vehicle/roller';
+import { setupTouchAndClickControls } from './vehicle/touch-controls';
+import type { GameEvents, GameInstance, GameOptions, GameState, VehicleState } from './types';
 
-export type { GameEvents, GameInstance, GameOptions, GameState };
+export type { GameEvents, GameInstance, GameOptions, GameState, VehicleState };
 
 function setupLighting(scene: THREE.Scene): void {
   scene.background = new THREE.Color(0xf3ead3); // --cream
@@ -39,14 +41,6 @@ function createPhysicsWorld(rapier: typeof RAPIER): {
   const gravity = { x: 0.0, y: -9.81, z: 0.0 };
   const world = new rapier.World(gravity);
   const bodies = new Map<string, RAPIER.RigidBody>();
-
-  // Dynamic test body for vehicle physics verification
-  const bodyDesc = rapier.RigidBodyDesc.dynamic().setTranslation(0, 2, 0);
-  const body = world.createRigidBody(bodyDesc);
-  const colliderDesc = rapier.ColliderDesc.ball(0.5);
-  world.createCollider(colliderDesc, body);
-  bodies.set('test-body', body);
-
   return { world, bodies };
 }
 
@@ -151,9 +145,11 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
 
   const materials = createSharedMaterials();
   const groundBase = createGroundBase(scene, world, RAPIER, materials);
+  const vehicle = createRoller(scene, world, RAPIER, materials, { x: 0, y: 0.6, z: 6 });
+  bodies.set('roller', vehicle.body);
 
   const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 18, 30);
+  camera.position.set(0, 10, 20);
   camera.lookAt(0, 0, 0);
 
   const { renderer, backend } = await createRenderer(canvas);
@@ -175,9 +171,12 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
     debugPanel: debugController.panel,
     events
   });
+  state.vehicle = vehicle;
 
   const stageInputs = createStageInputs();
   const cleanupInputs = stageInputs.setup(state);
+  const touchControls = setupTouchAndClickControls(state);
+
   const stages = [
     stageInputs,
     createStageVehicle(),
@@ -201,8 +200,10 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
       loop.stop();
       cleanupResize();
       cleanupInputs();
+      touchControls.destroy();
       debugController.destroy();
       groundBase.dispose();
+      vehicle.model.dispose();
       materials.dispose();
       renderer.dispose();
       world.free();
