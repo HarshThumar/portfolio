@@ -1,10 +1,10 @@
 ---
-// Until M2 builds the walkout intro and the map, the home page drops you at Lord's.
+// The home page is the hub: Narendra Modi Stadium, Ahmedabad. M2 puts the opening in front of it.
 import GroundPage from '../layouts/GroundPage.astro';
 import grounds from '../content/grounds.json';
 
-const lords = grounds.find((ground) => ground.slug === 'lords');
-if (!lords) throw new Error("grounds.json has no Lord's entry");
+const hub = grounds.find((ground) => ground.slug === 'ahmedabad');
+if (!hub) throw new Error('grounds.json has no Ahmedabad entry');
 ---
 
-<GroundPage ground={lords} title="The Test Tour | Harsh Thumar" />
+<GroundPage ground={hub} start="hub" title="The Test Tour | Harsh Thumar" />

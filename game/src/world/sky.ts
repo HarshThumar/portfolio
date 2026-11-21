@@ -2,6 +2,8 @@ import * as THREE from 'three/webgpu';
 import { PALETTE } from './palette';
 import { createMergeBatch, type MergedGroup } from './merge-batch';
 import { createSkyButton, type SkyMode } from './sky-button';
+import { PROJECT_FIELD, type FieldShape } from './field-shape';
+import type { Atmosphere } from './atmosphere';
 
 export interface SkyController {
   setMode: (mode: SkyMode) => void;
@@ -14,8 +16,8 @@ export interface SkyController {
 
 /** sky.ts owns every light intensity; index.ts only creates the lights. */
 const SKY_LIGHT = {
-  day: { sun: 1.0, ambient: 0.85, flood: 0 },
-  night: { sun: 0.15, ambient: 0.35, flood: 1.6 }
+  day: { sun: 1.6, ambient: 0.35, hemi: 0.6, flood: 0 },
+  night: { sun: 0.12, ambient: 0.3, hemi: 0.25, flood: 1.6 }
 } as const;
 
 const DAY_START = 6.5;
@@ -24,13 +26,17 @@ const RECHECK_MS = 60_000;
 const STORAGE_KEY = 'tour-sky-mode';
 const MAST_HEIGHT = 18;
 
-// Outside the outermost stand tier (57 x 65), on the diagonals.
-const TOWER_SPOTS = [
-  { x: -47, z: -53, lit: true },
-  { x: 47, z: -53, lit: false },
-  { x: -47, z: 53, lit: false },
-  { x: 47, z: 53, lit: true }
-];
+/** Outside the outermost stand tier (rope + 15 m), on the diagonals. */
+function towerSpots(field: FieldShape): Array<{ x: number; z: number; lit: boolean }> {
+  const x = (field.rx + 15) * 0.825;
+  const z = (field.rz + 15) * 0.815;
+  return [
+    { x: -x, z: -z, lit: true },
+    { x, z: -z, lit: false },
+    { x: -x, z, lit: false },
+    { x, z, lit: true }
+  ];
+}
 
 function createHourReader(): () => number {
   let formatter: Intl.DateTimeFormat | null = null;
@@ -78,21 +84,33 @@ interface Towers {
   dispose: () => void;
 }
 
-function createTowers(scene: THREE.Scene): Towers {
+/** A bowl with floodlights in its roof (the hub) passes where they hang; no masts are drawn. */
+export interface RoofLights {
+  radius: number;
+  height: number;
+}
+
+function createTowers(scene: THREE.Scene, field: FieldShape, roof?: RoofLights): Towers {
   const mastMat = new THREE.MeshLambertMaterial({ color: PALETTE.ink });
   const headMat = new THREE.MeshBasicMaterial({ color: PALETTE.cream });
   const batch = createMergeBatch();
   const lights: THREE.SpotLight[] = [];
 
-  for (const spot of TOWER_SPOTS) {
-    const mast = new THREE.CylinderGeometry(0.25, 0.45, MAST_HEIGHT, 6);
-    batch.add(mastMat, mast, spot.x, MAST_HEIGHT / 2, spot.z);
-    const head = new THREE.BoxGeometry(2.4, 1.2, 0.6);
-    batch.add(headMat, head, spot.x, MAST_HEIGHT, spot.z, Math.atan2(-spot.x, -spot.z));
+  const spots = roof
+    ? towerSpots({ rx: roof.radius / 0.825 - 15, rz: roof.radius / 0.815 - 15 })
+    : towerSpots(field);
+  const height = roof ? roof.height : MAST_HEIGHT;
+  for (const spot of spots) {
+    if (!roof) {
+      const mast = new THREE.CylinderGeometry(0.25, 0.45, MAST_HEIGHT, 6);
+      batch.add(mastMat, mast, spot.x, MAST_HEIGHT / 2, spot.z);
+      const head = new THREE.BoxGeometry(2.4, 1.2, 0.6);
+      batch.add(headMat, head, spot.x, MAST_HEIGHT, spot.z, Math.atan2(-spot.x, -spot.z));
+    }
     if (!spot.lit) continue;
     // decay 0: a 70 m throw would otherwise need an unwieldy intensity.
     const light = new THREE.SpotLight(PALETTE.flood, 0, 0, Math.PI / 4, 0.5, 0);
-    light.position.set(spot.x, MAST_HEIGHT, spot.z);
+    light.position.set(spot.x, height, spot.z);
     light.target.position.set(0, 0, 0);
     scene.add(light, light.target);
     lights.push(light);
@@ -119,14 +137,13 @@ function createTowers(scene: THREE.Scene): Towers {
 
 export function createSkySystem(
   scene: THREE.Scene,
-  sunLight?: THREE.DirectionalLight,
-  ambientLight?: THREE.AmbientLight
+  atmosphere: Atmosphere,
+  field: FieldShape = PROJECT_FIELD,
+  roof?: RoofLights
 ): SkyController {
   let mode = loadSkyModePreference();
   const readHour = createHourReader();
-  const towers = createTowers(scene);
-  const dayBg = new THREE.Color(PALETTE.cream);
-  const nightBg = new THREE.Color(PALETTE.night);
+  const towers = createTowers(scene, field, roof);
   const dayHead = new THREE.Color(PALETTE.cream);
   const nightHead = new THREE.Color(PALETTE.flood);
   const button = createSkyButton(() => toggle());
@@ -146,9 +163,10 @@ export function createSkySystem(
     if (applied === night) return;
     applied = night;
     const set = night ? SKY_LIGHT.night : SKY_LIGHT.day;
-    scene.background = night ? nightBg : dayBg;
-    if (sunLight) sunLight.intensity = set.sun;
-    if (ambientLight) ambientLight.intensity = set.ambient;
+    atmosphere.setNight(night);
+    atmosphere.sun.intensity = set.sun;
+    atmosphere.ambient.intensity = set.ambient;
+    atmosphere.hemi.intensity = set.hemi;
     for (const l of towers.lights) l.intensity = set.flood;
     towers.headMaterial.color.copy(night ? nightHead : dayHead);
   }

@@ -6,99 +6,16 @@ import { createDebugPanel } from './debug/debug-panel';
 import { createPhysicsWorld, createRenderer } from './loop/engine-setup';
 import { createStageInputs } from './loop/stage-inputs';
 import { createStageInteractions } from './loop/stage-interactions';
-import { createSharedMaterials, PALETTE } from './world/palette';
-import { createGroundBase } from './world/ground-base';
-import { createLordsPavilion } from './world/lords-pavilion';
-import { createHonoursBoard, type HonoursBoardController } from './world/honours-board';
-import { createScoreboard } from './world/scoreboard';
-import { createBlobShadow } from './world/blob-shadow';
-import { createCrowd } from './world/crowd';
-import { createSkySystem } from './world/sky';
-import { createInitialState, startMainLoop, type GameLoop } from './loop/game-state';
-import { createRoller } from './vehicle/roller';
+import { createSharedMaterials } from './world/palette';
+import { createInitialState, startMainLoop } from './loop/game-state';
 import { setupTouchAndClickControls } from './vehicle/touch-controls';
-import { createStumps } from './interactions/stumps';
-import { createBoundaryDetector } from './interactions/boundary';
-import { createInfoPost } from './interactions/info-post';
-import { createSoundManager, type SoundManager } from './audio/audio';
-import { createStampBanner, type StampBanner } from './ui/stamp-banner';
-import { createProjectPanel, type ProjectPanelController } from './ui/project-panel';
-import type {
-  GameEvents,
-  GameInstance,
-  GameOptions,
-  GameState,
-  GroundData,
-  VehicleState
-} from './types';
+import { createSoundManager } from './audio/audio';
+import { createStampBanner } from './ui/stamp-banner';
+import { createSceneManager } from './scenes/scene-manager';
+import { HUB } from './scenes/scene-types';
+import type { GameEvents, GameInstance, GameOptions, GameState, VehicleState } from './types';
 
 export type { GameEvents, GameInstance, GameOptions, GameState, VehicleState };
-
-function setupLighting(scene: THREE.Scene): {
-  sun: THREE.DirectionalLight;
-  ambient: THREE.AmbientLight;
-} {
-  // Intensities are owned by the sky system (day/night); these are just the lights.
-  scene.background = new THREE.Color(PALETTE.cream);
-  const ambient = new THREE.AmbientLight(PALETTE.flood);
-  scene.add(ambient);
-
-  const sun = new THREE.DirectionalLight(PALETTE.flood);
-  sun.position.set(15, 30, 20);
-  scene.add(sun);
-  return { sun, ambient };
-}
-
-function setupInteractions(
-  scene: THREE.Scene,
-  world: RAPIER.World,
-  materials: ReturnType<typeof createSharedMaterials>,
-  stageInteractions: ReturnType<typeof createStageInteractions>,
-  soundManager: SoundManager,
-  stampBanner: StampBanner,
-  ground: GroundData
-): {
-  honoursBoard: HonoursBoardController;
-  projectPanel: ProjectPanelController;
-  dispose: () => void;
-} {
-  const stumps = createStumps(scene, world, RAPIER, materials, () => {
-    soundManager.playStumpClatter();
-    soundManager.playHowzat();
-    stampBanner.show('HOWZAT!');
-  });
-
-  const boundary = createBoundaryDetector(() => {
-    soundManager.playSixRoar();
-    stampBanner.show('SIX!');
-  });
-
-  const projectPanel = createProjectPanel(ground);
-
-  const infoPost = createInfoPost(scene, world, RAPIER, materials, INFO_POST, () => {
-    soundManager.playBell();
-    projectPanel.open();
-  });
-
-  const honoursBoard = createHonoursBoard(ground, { x: 0, z: -46 });
-
-  stageInteractions.addUpdatable(stumps.update);
-  stageInteractions.addUpdatable(boundary.update);
-  stageInteractions.addUpdatable(infoPost.update);
-  stageInteractions.addUpdatable(honoursBoard.update);
-
-  return {
-    honoursBoard,
-    projectPanel,
-    dispose: () => {
-      stumps.dispose();
-      infoPost.dispose();
-      honoursBoard.destroy();
-      projectPanel.destroy();
-      stageInteractions.clear();
-    }
-  };
-}
 
 function setupResizeHandler(
   camera: THREE.PerspectiveCamera,
@@ -117,183 +34,90 @@ function setupResizeHandler(
   return () => window.removeEventListener('resize', onResize);
 }
 
-function createGameDisposer(params: {
-  loop: GameLoop;
-  cleanupResize: () => void;
-  cleanupInputs: () => void;
-  touchControls: { destroy: () => void };
-  debugController: { destroy: () => void };
-  stampBanner: StampBanner;
-  soundManager: SoundManager;
-  interactionCleanup: { dispose: () => void };
-  groundBase: { dispose: () => void };
-  pavilion: { dispose: () => void };
-  scoreboard: { dispose: () => void };
-  crowd: { dispose: () => void };
-  shadow: { dispose: () => void };
-  sky: { dispose: () => void };
-  vehicle: VehicleState;
-  materials: { dispose: () => void };
-  renderer: WebGPURenderer;
-  world: RAPIER.World;
-  disposables: Array<() => void>;
-}): () => void {
-  return () => {
-    params.loop.stop();
-    params.cleanupResize();
-    params.cleanupInputs();
-    params.touchControls.destroy();
-    params.debugController.destroy();
-    params.stampBanner.destroy();
-    params.soundManager.destroy();
-    params.interactionCleanup.dispose();
-    params.groundBase.dispose();
-    params.pavilion.dispose();
-    params.scoreboard.dispose();
-    params.crowd.dispose();
-    params.shadow.dispose();
-    params.sky.dispose();
-    params.vehicle.model.dispose();
-    params.materials.dispose();
-    params.renderer.dispose();
-    params.world.free();
-    for (const fn of params.disposables) fn();
-  };
-}
-
-// docs/06: placement teaches. The roller starts pointed at the info post.
-const INFO_POST = { x: 22, y: 0, z: 0 };
-const ROLLER_START = { x: 0, y: 0.6, z: 6 };
-const ROLLER_START_YAW = Math.atan2(INFO_POST.x - ROLLER_START.x, INFO_POST.z - ROLLER_START.z);
-
-function createWorldEntities(
-  scene: THREE.Scene,
-  world: RAPIER.World,
-  materials: ReturnType<typeof createSharedMaterials>,
-  ground: GroundData
-) {
-  const groundBase = createGroundBase(scene, world, RAPIER, materials, {
-    hideNorthSightScreen: true
-  });
-  const pavilion = createLordsPavilion(scene, world, RAPIER, materials, { x: 0, y: 0, z: -54 }, 0);
-  const scoreboard = createScoreboard(
-    scene,
-    world,
-    RAPIER,
-    materials,
-    { x: -34, y: 0, z: -10 },
-    Math.PI / 4,
-    ground
-  );
-  const vehicle = createRoller(scene, world, RAPIER, materials, ROLLER_START, ROLLER_START_YAW);
-  const crowd = createCrowd(scene);
-  const shadow = createBlobShadow(scene);
-  const followShadow = (): void => {
-    const { position, quaternion } = vehicle.model.group;
-    // Yaw straight from the quaternion; Euler .y flips past ±90°.
-    shadow.update(position.x, position.z, 2 * Math.atan2(quaternion.y, quaternion.w));
-  };
-  return { groundBase, pavilion, scoreboard, vehicle, crowd, shadow, followShadow };
-}
-
-function createCamera(): THREE.PerspectiveCamera {
-  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 10, 20);
-  camera.lookAt(0, 0, 0);
-  return camera;
-}
-
 function resolveDebug(optionsDebug?: boolean): boolean {
   const isDebugUrl =
     typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debug');
   return optionsDebug ?? isDebugUrl;
 }
 
+/**
+ * One visit. The renderer, camera, sound, HUD, inputs and loop live for the whole visit;
+ * scenes (the Ahmedabad hub, each ground) are built and freed by the scene manager.
+ */
 export async function initGame(options: GameOptions): Promise<GameInstance> {
   const { canvas } = options;
 
   // Renderer first: if WebGPU/WebGL2 setup fails, nothing else (DOM HUD, listeners) exists yet.
   const { renderer, backend } = await createRenderer(canvas);
   await RAPIER.init();
-  const { world, bodies } = createPhysicsWorld(RAPIER);
-  const scene = new THREE.Scene();
-  const { sun, ambient } = setupLighting(scene);
-  const sky = createSkySystem(scene, sun, ambient);
 
+  // A stand-in scene and world until the scene manager loads the first real one.
+  const firstWorld = createPhysicsWorld(RAPIER);
+  const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
   const materials = createSharedMaterials();
-  const { groundBase, pavilion, scoreboard, vehicle, crowd, shadow, followShadow } =
-    createWorldEntities(scene, world, materials, options.ground);
-  bodies.set('roller', vehicle.body);
-
-  const camera = createCamera();
   const shouldDebug = resolveDebug(options.debug);
   const debugController = createDebugPanel(shouldDebug);
-  const soundManager = createSoundManager();
-  const stampBanner = createStampBanner();
+  const sound = createSoundManager();
+  const banner = createStampBanner();
   const events = new TypedEmitter<GameEvents>();
 
   const state = createInitialState({
     canvas,
-    scene,
+    scene: new THREE.Scene(),
     camera,
     renderer,
-    world,
-    bodies,
+    world: firstWorld.world,
+    bodies: firstWorld.bodies,
     backend,
     shouldDebug,
     debugPanel: debugController.panel,
     events
   });
-  state.vehicle = vehicle;
 
   const stageInputs = createStageInputs();
   const cleanupInputs = stageInputs.setup(state);
   const touchControls = setupTouchAndClickControls(state);
-  const stageInteractions = createStageInteractions();
-  const interactionCleanup = setupInteractions(
-    scene,
-    world,
-    materials,
-    stageInteractions,
-    soundManager,
-    stampBanner,
-    options.ground
+  const interactions = createStageInteractions();
+
+  const scenes = createSceneManager({
+    state,
+    interactions,
+    base: options.base,
+    ctx: { sound, banner, materials, grounds: options.grounds, built: new Set(options.built) }
+  });
+  scenes.start(
+    options.start === HUB || options.built.includes(options.start) ? options.start : HUB
   );
+  firstWorld.world.free();
 
   const loop = startMainLoop({
     state,
     stageInputs,
-    stageInteractions,
+    stageInteractions: interactions,
     updateDebugPanel: debugController.update,
-    soundManager,
-    extraUpdatables: [scoreboard.update, crowd.update, sky.update, followShadow]
+    soundManager: sound,
+    extraUpdatables: []
   });
   const cleanupResize = setupResizeHandler(camera, renderer, events);
 
-  const dispose = createGameDisposer({
-    loop,
-    cleanupResize,
-    cleanupInputs,
-    touchControls,
-    debugController,
-    stampBanner,
-    soundManager,
-    interactionCleanup,
-    groundBase,
-    pavilion,
-    scoreboard,
-    crowd,
-    shadow,
-    sky,
-    vehicle,
-    materials,
-    renderer,
-    world,
-    disposables: state.disposables
-  });
-
-  return {
+  const instance: GameInstance = {
+    travel: scenes.travel,
     getState: () => state,
-    dispose
+    dispose: () => {
+      loop.stop();
+      cleanupResize();
+      cleanupInputs();
+      touchControls.destroy();
+      debugController.destroy();
+      scenes.destroy();
+      banner.destroy();
+      sound.destroy();
+      materials.dispose();
+      renderer.dispose();
+      for (const fn of state.disposables) fn();
+    }
   };
+  // ?debug only: lets device tests and probes drive the tour without a keyboard.
+  if (shouldDebug) (window as unknown as { tour?: GameInstance }).tour = instance;
+  return instance;
 }

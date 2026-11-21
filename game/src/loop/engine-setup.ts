@@ -1,4 +1,9 @@
-import { WebGPURenderer } from 'three/webgpu';
+import {
+  ACESFilmicToneMapping,
+  PCFSoftShadowMap,
+  SRGBColorSpace,
+  WebGPURenderer
+} from 'three/webgpu';
 import type RAPIER from '@dimforge/rapier3d-compat';
 
 export function createPhysicsWorld(rapier: typeof RAPIER): {
@@ -22,6 +27,12 @@ export async function createRenderer(canvas: HTMLCanvasElement): Promise<{
   });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.outputColorSpace = SRGBColorSpace;
+  // Gentle filmic curve keeps the warm palette from clipping under the low sun.
+  renderer.toneMapping = ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = PCFSoftShadowMap;
   await renderer.init();
 
   const isWebGPU = Boolean((renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend);

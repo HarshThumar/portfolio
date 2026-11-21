@@ -1,17 +1,16 @@
 ---
 import GroundPage from '../../layouts/GroundPage.astro';
 import grounds from '../../content/grounds.json';
+import { BUILT_GROUNDS } from '../../content/built-grounds';
 
 export function getStaticPaths() {
-  // Only grounds whose scene exists get a page. M3 adds the other nine here.
-  // (Kept inside: Astro runs getStaticPaths in its own scope.)
-  const BUILT = new Set(['lords']);
+  // Only grounds whose scene exists get a page. M3 adds the others to BUILT_GROUNDS.
   return grounds
-    .filter((ground) => BUILT.has(ground.slug))
+    .filter((ground) => BUILT_GROUNDS.includes(ground.slug))
     .map((ground) => ({ params: { slug: ground.slug }, props: { ground } }));
 }
 
 const { ground } = Astro.props;
 ---
 
-<GroundPage ground={ground} title={`${ground.name} | The Test Tour`} />
+<GroundPage ground={ground} start={ground.slug} title={`${ground.name} | The Test Tour`} />

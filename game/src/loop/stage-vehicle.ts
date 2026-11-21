@@ -32,6 +32,14 @@ export function createStageVehicle(): Stage {
     update: (state: GameState) => {
       const vehicle = state.vehicle;
       if (!vehicle) return;
+      if (state.cameraShot) {
+        // Mid-transition the roller coasts to a stop; nothing the visitor presses applies.
+        vehicle.driveTarget = null;
+        vehicle.intent.forward = 0;
+        vehicle.intent.steer = 0;
+        vehicle.intent.brake = true;
+        return;
+      }
       const { forward, steer, brake } = state.inputs;
 
       if (forward !== 0 || steer !== 0) vehicle.driveTarget = null;

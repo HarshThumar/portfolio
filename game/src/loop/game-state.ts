@@ -1,4 +1,4 @@
-import type * as THREE from 'three/webgpu';
+import * as THREE from 'three/webgpu';
 import RAPIER from '@dimforge/rapier3d-compat';
 import type { WebGPURenderer } from 'three/webgpu';
 import type { TypedEmitter } from '../events/emitter';
@@ -108,6 +108,8 @@ export function createInitialState(params: {
       }
     },
     events: params.events,
-    disposables: []
+    disposables: [],
+    cameraLook: new THREE.Vector3(0, 1, 0),
+    cameraShot: null
   };
 }

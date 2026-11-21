@@ -80,7 +80,18 @@ export interface GameState {
   debug: GameDebug;
   events: TypedEmitter<GameEvents>;
   disposables: Array<() => void>;
+  /** Where the follow camera is looking; shots write it too so hand-backs don't jump. */
+  cameraLook: THREE.Vector3;
+  /** A scripted camera move (hop-in dive, swoop). While set, driving input is ignored. */
+  cameraShot: CameraShot | null;
 }
+
+/** Returns true when finished; the follow camera then takes over from where it left off. */
+export type CameraShot = (
+  camera: THREE.PerspectiveCamera,
+  look: THREE.Vector3,
+  dt: number
+) => boolean;
 
 export interface Stage {
   name: string;
@@ -107,11 +118,20 @@ export interface GroundData {
 
 export interface GameOptions {
   canvas: HTMLCanvasElement;
-  ground: GroundData;
+  /** Every entry of grounds.json, in id order (id 0 is the Ahmedabad hub). */
+  grounds: GroundData[];
+  /** 'hub' or a ground slug. */
+  start: string;
+  /** Slugs whose full-size scene exists; the others are models only until M3. */
+  built: string[];
+  /** The site's base URL ending in '/', so the address bar follows the scene. */
+  base: string;
   debug?: boolean;
 }
 
 export interface GameInstance {
+  /** Go to 'hub' or a ground slug, with the same transition as driving onto a mat. */
+  travel: (to: string) => void;
   dispose: () => void;
   getState: () => GameState;
 }

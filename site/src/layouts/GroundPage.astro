@@ -4,14 +4,20 @@
 import '../styles/tokens.css';
 import '../styles/fonts.css';
 import '../styles/game-ui.css';
+import grounds from '../content/grounds.json';
+import { BUILT_GROUNDS } from '../content/built-grounds';
 
 interface Props {
   ground: { slug: string; name: string };
+  /** 'hub' or a ground slug: where the visit starts. */
+  start: string;
   title: string;
 }
 
-const { ground, title } = Astro.props;
+const { ground, start, title } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+// The whole tour is one game: every page carries all grounds and starts at its own scene.
+const tour = { grounds, start, built: BUILT_GROUNDS, base };
 ---
 
 <!doctype html>
@@ -33,7 +39,7 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
     <div id="hud" class="hud"></div>
     <canvas
       id="tour-canvas"
-      data-ground={JSON.stringify(ground)}
+      data-tour={JSON.stringify(tour)}
       aria-label={`[[COPY: canvas label for ${ground.name}]]`}
     ></canvas>
     <div id="load-error" class="load-error" role="alert" hidden>
@@ -52,10 +58,10 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
       const showError = (): void => {
         document.getElementById('load-error')?.removeAttribute('hidden');
       };
-      if (canvas instanceof HTMLCanvasElement && canvas.dataset.ground) {
-        const ground = JSON.parse(canvas.dataset.ground);
+      if (canvas instanceof HTMLCanvasElement && canvas.dataset.tour) {
+        const tour = JSON.parse(canvas.dataset.tour);
         import('game')
-          .then(({ initGame }) => initGame({ canvas, ground }))
+          .then(({ initGame }) => initGame({ canvas, ...tour }))
           .catch((error: unknown) => {
             console.error('[tour] game failed to start', error);
             showError();

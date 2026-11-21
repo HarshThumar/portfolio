@@ -85,3 +85,28 @@ button {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* Covers the canvas while one ground is swapped for another (game/src/ui/veil.ts). */
+.veil {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: var(--cream);
+  opacity: 0;
+  pointer-events: none;
+  transition-property: opacity;
+  transition-timing-function: ease-in-out;
+}
+
+.hud-btn {
+  background: var(--cream);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--ink);
+}
