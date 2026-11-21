@@ -1,11 +1,11 @@
 import type RAPIER from '@dimforge/rapier3d-compat';
 import type { MergeBatch } from './merge-batch';
-import { angleDiff, tierOuterR, type BowlLayout } from './ahmedabad-bowl-layout';
+import { angleDiff, tierOuterR, tierTopY, type BowlLayout } from './ahmedabad-bowl-layout';
 import type { BowlMaterials } from './ahmedabad-bowl-parts';
 
 const BOARD_COUNT = 128;
 const WALL_SEGMENTS = 64;
-const SCREEN_HALF_WIDTH = 8;
+const SCREEN_HALF_WIDTH = 10;
 const SCREEN_HEIGHT = 8;
 
 function yawQuat(yaw: number): { x: number; y: number; z: number; w: number } {
@@ -18,7 +18,7 @@ export function addBoards(batch: MergeBatch, m: BowlMaterials, layout: BowlLayou
   for (let k = 0; k < BOARD_COUNT; k++) {
     const a = ((k + 0.5) / BOARD_COUNT) * Math.PI * 2;
     if (Math.abs(angleDiff(a, layout.gateAngle)) < layout.gateHalf + 0.01) continue;
-    const mat = m.boards[k % m.boards.length] ?? m.trim;
+    const mat = m.boards[k % m.boards.length] ?? m.white;
     batch.box(
       mat,
       width,
@@ -37,7 +37,7 @@ export function addSightScreens(batch: MergeBatch, m: BowlMaterials, layout: Bow
   const z = layout.rope + 1.8;
   for (const sz of [-1, 1]) {
     batch.box(
-      m.screen,
+      m.white,
       SCREEN_HALF_WIDTH * 2,
       SCREEN_HEIGHT,
       0.3,
@@ -52,7 +52,7 @@ export function addSightScreens(batch: MergeBatch, m: BowlMaterials, layout: Bow
   }
 }
 
-/** Players' gate: cream posts and lintel, timber doors, and a dark tunnel behind. */
+/** White players' building set into the lower tier: dark window strips, tunnel mouth, doors. */
 export function addGate(batch: MergeBatch, m: BowlMaterials, layout: BowlLayout): void {
   const g = layout.gateAngle;
   const at = (r: number, x: number, y: number): [number, number, number] => [
@@ -63,15 +63,22 @@ export function addGate(batch: MergeBatch, m: BowlMaterials, layout: BowlLayout)
   const r0 = layout.lower.r0;
   const rEnd = tierOuterR(layout.lower);
   const len = rEnd - r0;
-  for (const sx of [-1, 1]) {
-    batch.box(m.trim, 0.6, 3.6, len, ...at(r0 + len / 2, sx * 3.7, 1.8), g);
-    batch.box(m.trim, 0.6, 4.2, 0.6, ...at(layout.wallR + 0.9, sx * 3.7, 2.1), g);
-    batch.box(m.frame, 1.7, 3.2, 0.2, ...at(layout.wallR + 0.9, sx * 1.0, 1.6), g);
+  const front = r0 + 0.3;
+  const wFront = 2 * Math.sin(layout.gateHalf) * r0 + 0.6;
+  const wBack = 2 * Math.sin(layout.gateHalf) * rEnd + 0.6;
+  const h = tierTopY(layout.lower) + 0.4;
+  batch.box(m.white, wFront, h, len / 2, ...at(r0 + len / 4, 0, h / 2), g);
+  batch.box(m.white, wBack, h, len / 2, ...at(r0 + (len * 3) / 4, 0, h / 2), g);
+  batch.box(m.under, wBack + 0.4, 0.4, len + 0.4, ...at(r0 + len / 2, 0, h + 0.2), g);
+  for (const y of [h - 1.3, h - 3.0]) {
+    batch.box(m.glass, wFront - 2.4, 0.9, 0.12, ...at(front + 0.02, 0, y), g);
   }
-  batch.box(m.frame, 8.4, 0.5, len, ...at(r0 + len / 2, 0, 3.85), g);
-  batch.box(m.trim, 8.4, 3.45, len, ...at(r0 + len / 2, 0, 5.95), g);
-  batch.box(m.trim, 8.4, 0.5, 0.7, ...at(layout.wallR + 0.9, 0, 4.45), g);
-  batch.box(m.dark, 7.4, 3.6, 0.2, ...at(rEnd - 0.1, 0, 1.8), g);
+  batch.box(m.dark, 6.4, 3.2, 0.14, ...at(front + 0.04, 0, 1.6), g);
+  for (const sx of [-1, 1]) {
+    batch.box(m.frame, 3.0, 3.0, 0.16, ...at(front + 0.1, sx * 1.55, 1.5), g);
+    batch.box(m.white, 0.5, 3.4, 0.3, ...at(front + 0.08, sx * 3.45, 1.7), g);
+  }
+  batch.box(m.white, 7.4, 0.5, 0.3, ...at(front + 0.08, 0, 3.45), g);
 }
 
 /** A ring of static blocks just behind the boards, plus the sight screens. */

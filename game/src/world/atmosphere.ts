@@ -73,9 +73,10 @@ export function createAtmosphere(
   const dayFog = new THREE.Color(DAY_SKY.horizon);
   const nightFog = new THREE.Color(NIGHT_SKY.horizon);
 
-  // Fog starts beyond the outer stands so the bowl itself stays crisp.
-  const fogNear = Math.max(field.rx, field.rz) + 40;
-  const fog = new THREE.Fog(dayFog.getHex(), fogNear, fogNear + 180);
+  // Fog is measured from the camera: it starts past the far side of the bowl (seen from the
+  // opposite stand) so the stadium stays crisp and only the world beyond it hazes.
+  const fogNear = Math.max(field.rx, field.rz) * 2 + 60;
+  const fog = new THREE.Fog(dayFog.getHex(), fogNear, fogNear + 250);
   scene.background = dayTexture;
   scene.fog = fog;
 

@@ -42,7 +42,7 @@ Rules:
 
 The home ground is the one place the visitor always returns to. It is about Harsh and it holds the tour.
 
-- **The bowl:** the huge round stadium with its ring of floodlights on the roof edge, in the miniature style.
+- **The bowl:** a faithful miniature of the real stadium (see [ground-references.md](ground-references.md)): orange lower tier, a white ring of corporate boxes, a tall blue upper tier with orange and yellow zig-zags, the white fabric roof with its LED ring on the inner edge and the lattice ring truss on top, and white V-shaped columns outside.
 - **The centre pitch is "about me":** the giant scoreboard shows Harsh's name and links; a contact board stands by the pavilion end (LinkedIn, email).
 - **The tour, inside the field:** around the outfield stand **nine small models of the project grounds**, each on a timber stand with a brass plaque (ground name, project title). Each model shows that ground's landmark: Lord's pavilion, the Oval gas holders, Galle fort, Table Mountain, and so on (table below).
 - **Hopping in:** in front of each model is a mat. Drive onto it and the camera **dives into the model**; the visitor comes out full-size inside that ground. Leaving a ground (a "back to Ahmedabad" sign by its gate, or the HUD) reverses it: you rise out of the model in the hub.
@@ -95,7 +95,7 @@ The sky follows **real Ahmedabad time** (Asia/Kolkata): day from 06:30 to 18:30,
 
 ## The grounds
 
-Ten grounds. Ground names and building shapes are tributes. **No official logos** of BCCI, ICC, IPL, any team or any ground authority. No sponsor signage, no real players, no team kits or colour schemes, no copied photos (model from your own references). Every building is a simplified low-poly interpretation in our own palette. The footer of every page carries: "Unofficial fan tribute. Not affiliated with or endorsed by BCCI, ICC, IPL or any stadium."
+Ten grounds. Ground names and building shapes are tributes. **Each ground must be recognisable as the real one** (Harsh, 21 Nov 2026): its stand layout and proportions, roof forms, seating colours and signature landmarks follow reference photos, collected per ground in [ground-references.md](ground-references.md). The miniature style stays (clean modelled shapes, no photo textures). **No official logos** of BCCI, ICC, IPL, any team or any ground authority. No sponsor signage, no real players, no team kits, no copied photos (photos are references only, never shipped). The footer of every page carries: "Unofficial fan tribute. Not affiliated with or endorsed by BCCI, ICC, IPL or any stadium."
 
 | # | Ground | Landmark to model | Project | Why it fits (use this line on the plaque or panel) | Scoreboard |
 |---|---|---|---|---|---|

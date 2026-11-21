@@ -2,10 +2,9 @@ import * as THREE from 'three/webgpu';
 import type RAPIER from '@dimforge/rapier3d-compat';
 import type { GameState, GroundData } from '../types';
 import type { SharedMaterials } from './palette';
-import { createMergeBatch } from './merge-batch';
+import { createColorBatch } from './mini-batch';
 import type { FieldShape } from './field-shape';
-import { addPavilionParts } from './pavilion-parts';
-import { MODEL_SIZE, addMiniGround } from './mini-ground';
+import { MODEL_SIZE, addMiniGround, createMiniMaterial } from './mini-ground';
 import { PLAQUE_HALF_RUN, PLAQUE_Y, createPlaque } from './plaque';
 import { createStandMat, updateStandMat, type StandMat } from './stand-mat';
 
@@ -34,10 +33,7 @@ const RETURN_DIST = 6;
 const ENTER_SPEED = 4;
 const REARM_MARGIN = 2;
 const NEAR_DIST = 12;
-const PAVILION_SCALE = 0.09;
-const TINTS = [
-  0xb86a4a, 0x7f9a5a, 0xc9a45a, 0x8a6e9c, 0x5f8f9a, 0xc98a6a, 0x9aa36a, 0xb0645a, 0x7a8f6a
-];
+const PLINTH_COLORS = { timber: 0x6b4a2b, cream: 0xf3ead3, willow: 0xd8b87a };
 
 function yawQuat(yaw: number): { x: number; y: number; z: number; w: number } {
   return { x: 0, y: Math.sin(yaw / 2), z: 0, w: Math.cos(yaw / 2) };
@@ -51,43 +47,23 @@ interface Placed {
   armed: boolean | null;
 }
 
-/** The stand's own group: plinth, miniature ground, optional scaled Lord's pavilion. */
+/** The stand's own group: plinth and the ground's miniature, one draw call. */
 function buildStandGroup(
-  m: SharedMaterials,
-  tint: THREE.Material,
-  isLords: boolean,
+  mat: THREE.Material,
+  slug: string,
   disposers: Array<() => void>
 ): THREE.Group {
-  const batch = createMergeBatch();
-  batch.box(m.timber, PLINTH_HALF * 2, PLINTH_HEIGHT, PLINTH_HALF * 2, 0, PLINTH_HEIGHT / 2, 0);
-  batch.box(
-    m.cream,
-    PLINTH_HALF * 2 + 0.3,
-    0.12,
-    PLINTH_HALF * 2 + 0.3,
-    0,
-    PLINTH_HEIGHT + 0.06,
-    0
-  );
-  batch.box(m.willow, PLINTH_HALF * 2 + 0.05, 0.12, PLINTH_HALF * 2 + 0.05, 0, 0.3, 0);
-  const top = PLINTH_HEIGHT + 0.12;
-  const inner = createMergeBatch();
-  addMiniGround(inner, m, tint, isLords);
-  const model = inner.build();
-  model.group.position.y = top;
-  const base = batch.build();
+  const batch = createColorBatch();
+  const w = PLINTH_HALF * 2;
+  batch.box(PLINTH_COLORS.timber, w, PLINTH_HEIGHT, w, { y: PLINTH_HEIGHT / 2 });
+  batch.box(PLINTH_COLORS.cream, w + 0.3, 0.12, w + 0.3, { y: PLINTH_HEIGHT + 0.06 });
+  batch.box(PLINTH_COLORS.willow, w + 0.05, 0.12, w + 0.05, { y: 0.3 });
+  batch.lift(PLINTH_HEIGHT + 0.12);
+  addMiniGround(batch, slug);
+  const built = batch.build(mat);
   const group = new THREE.Group();
-  group.add(base.group, model.group);
-  disposers.push(base.dispose, model.dispose);
-  if (isLords) {
-    const pav = createMergeBatch();
-    addPavilionParts(pav, m);
-    const built = pav.build();
-    built.group.scale.setScalar(PAVILION_SCALE);
-    built.group.position.set(0, top + 0.1, -2.6);
-    group.add(built.group);
-    disposers.push(built.dispose);
-  }
+  group.add(built.group);
+  disposers.push(built.dispose);
   return group;
 }
 
@@ -133,7 +109,7 @@ function computePlacement(
 
 interface PlaceContext {
   materials: SharedMaterials;
-  tint: THREE.Material;
+  miniMat: THREE.Material;
   world: RAPIER.World;
   rapier: typeof RAPIER;
 }
@@ -147,7 +123,7 @@ function placeStand(
   disposers: Array<() => void>
 ): { group: THREE.Group; body: RAPIER.RigidBody; redraw: () => void; placed: Placed } {
   const { centre, yaw, dir } = computePlacement(index, count, field);
-  const group = buildStandGroup(ctx.materials, ctx.tint, g.slug === 'lords', disposers);
+  const group = buildStandGroup(ctx.miniMat, g.slug, disposers);
   const plaque = createPlaque(g.name, g.projectTitle, ctx.materials);
   plaque.group.position.z = PLAQUE_DIST;
   const mat = createStandMat(ctx.materials, MAT_RADIUS);
@@ -182,18 +158,17 @@ export function createGroundModels(
   root.name = 'ground-models';
   scene.add(root);
   const placed: Placed[] = [];
-  const tints = TINTS.map((c) => new THREE.MeshLambertMaterial({ color: c }));
+  const miniMat = createMiniMaterial();
   const bodies: RAPIER.RigidBody[] = [];
   const redraws: Array<() => void> = [];
 
   grounds.forEach((g, i) => {
-    const tint = tints[i % tints.length] ?? materials.cream;
     const one = placeStand(
       g,
       i,
       grounds.length,
       field,
-      { materials, tint, world, rapier },
+      { materials, miniMat, world, rapier },
       disposers
     );
     root.add(one.group);
@@ -236,7 +211,7 @@ export function createGroundModels(
       disposed = true;
       scene.remove(root);
       for (const d of disposers) d();
-      for (const t of tints) t.dispose();
+      miniMat.dispose();
       for (const b of bodies) world.removeRigidBody(b);
     }
   };

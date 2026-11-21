@@ -44,10 +44,10 @@ export function tierOuterR(t: TierSpec): number {
 }
 
 export function createLayout(rope: number): BowlLayout {
-  const lower: TierSpec = { r0: rope + 5, y0: 0, rows: 14, run: 0.9, rise: 0.55 };
-  const fasciaR = tierOuterR(lower) + 3.4;
-  const upper: TierSpec = { r0: fasciaR, y0: 10.5, rows: 16, run: 0.95, rise: 0.75 };
-  const backWallR = tierOuterR(upper) + 0.1;
+  const lower: TierSpec = { r0: rope + 5, y0: 0, rows: 12, run: 1.0, rise: 0.6 };
+  const fasciaR = tierOuterR(lower) + 0.3;
+  const upper: TierSpec = { r0: fasciaR + 3.7, y0: 12.2, rows: 20, run: 0.8, rise: 0.8 };
+  const backWallR = tierOuterR(upper) + 0.2;
   return {
     rope,
     boardR: rope + 3.2,
@@ -57,16 +57,16 @@ export function createLayout(rope: number): BowlLayout {
     fasciaR,
     fasciaTopY: upper.y0,
     backWallR,
-    outerWallR: backWallR + 1.2,
+    outerWallR: backWallR + 1.5,
     roof: {
-      rOuter: backWallR + 2.7,
-      yOuter: 29,
-      rInner: rope + 16,
-      yInner: 25.5,
-      thick: 0.7
+      rOuter: backWallR + 4.6,
+      yOuter: 34,
+      rInner: rope + 26,
+      yInner: 31.8,
+      thick: 0.8
     },
     gateAngle: GATE_ANGLE,
-    gateHalf: 0.06
+    gateHalf: 0.15
   };
 }
 

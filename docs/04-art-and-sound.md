@@ -36,6 +36,7 @@ Rules:
 The whole world is **a beautifully made tabletop model of a cricket ground**, the kind a collector builds: soft light, rounded edges, little painted people. Simple shapes are fine; *careless* shapes are not. Not photoreal (that reads as a cheap mobile game in a browser).
 
 What makes it read as crafted, in order of impact:
+0. **The real ground, recognisably.** A miniature of *that* stadium, not a generic one: its real stand layout, roof, seat colours and landmarks, taken from reference photos (docs/ground-references.md). A visitor who has been there should know it at a glance.
 1. **Real light, baked.** Soft sun shadows and ambient occlusion (the soft darkening where things meet) baked into lightmaps in Blender. One real-time light only for the roller and moving things. Without this everything looks pasted on.
 2. **Modelled, not primitive.** Every object is modelled in Blender (by script or by hand): bevelled edges, trims, railings, windows, steps, seats. No raw boxes or cylinders on screen.
 3. **A real crowd.** Little people with heads and arms, 3–4 poses, a few body shapes, muted palette clothing; animated in a shader (bob, wave, Mexican wave). Not sticks.
