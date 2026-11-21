@@ -1,14 +1,25 @@
-type OpeningPhaseName = 'gather' | 'stitch' | 'ready';
+// The opening's clock (docs/03, "Opening: the kit becomes a ball"). Pure functions only, so the
+// timing can be unit-tested without three.js or a DOM.
+
+type OpeningPhaseName = 'gather' | 'panels' | 'stitch' | 'stamp' | 'ready';
 
 export interface OpeningPhaseState {
   phase: OpeningPhaseName;
-  assembled: number;
+  /** 0→1 while the kit flies in and gathers into a cluster. */
+  gather: number;
+  /** 0→1 while the cluster turns into four leather quarters that close into the ball. */
+  panels: number;
+  /** 0→1 while the seam stitches itself (main seam, then the quarter seams). */
   seam: number;
+  /** 0→1 while the ball turns to show the gold HT stamp and the foil shines. */
+  stamp: number;
 }
 
 export const GATHER_START = 0.3;
 export const GATHER_END = 3.0;
-export const STITCH_END = 3.6;
+export const PANELS_END = 3.8;
+export const STITCH_END = 4.6;
+export const STAMP_END = 5.6;
 
 export function clamp(v: number, min = 0, max = 1): number {
   return Math.max(min, Math.min(max, v));
@@ -24,40 +35,37 @@ export function easeOutCubic(t: number): number {
   return 1 - (1 - c) ** 3;
 }
 
-/** Normalized and eased progress [0, 1] for a piece flying into the ball. */
+/** Overshoots a little past 1 and settles: the "snap" when the leather quarters close. */
+export function easeOutBack(t: number): number {
+  const c = clamp(t);
+  const k = 1.70158;
+  return 1 + (k + 1) * (c - 1) ** 3 + k * (c - 1) ** 2;
+}
+
+/** Normalised, eased progress [0, 1] for one kit piece flying in. */
 export function pieceProgress(t: number, delay: number, duration: number): number {
   if (duration <= 0) return t >= delay ? 1 : 0;
   if (t <= delay) return 0;
   if (t >= delay + duration) return 1;
-  const raw = (t - delay) / duration;
-  return easeInOutCubic(raw);
+  return easeInOutCubic((t - delay) / duration);
 }
 
-/** Pure state of the opening animation at timestamp t in seconds. */
+function span(t: number, start: number, end: number): number {
+  return clamp((t - start) / (end - start));
+}
+
+/** Where the opening is at `t` seconds. */
 export function openingPhase(t: number): OpeningPhaseState {
-  if (t < GATHER_END) {
-    const raw = (t - GATHER_START) / (GATHER_END - GATHER_START);
-    const assembled = clamp(raw);
-    return {
-      phase: 'gather',
-      assembled,
-      seam: 0
-    };
-  }
-
-  if (t < STITCH_END) {
-    const raw = (t - GATHER_END) / (STITCH_END - GATHER_END);
-    const seam = clamp(raw);
-    return {
-      phase: 'stitch',
-      assembled: 1,
-      seam
-    };
-  }
-
-  return {
+  const state: OpeningPhaseState = {
     phase: 'ready',
-    assembled: 1,
-    seam: 1
+    gather: span(t, GATHER_START, GATHER_END),
+    panels: span(t, GATHER_END, PANELS_END),
+    seam: span(t, PANELS_END, STITCH_END),
+    stamp: span(t, STITCH_END, STAMP_END)
   };
+  if (t < GATHER_END) state.phase = 'gather';
+  else if (t < PANELS_END) state.phase = 'panels';
+  else if (t < STITCH_END) state.phase = 'stitch';
+  else if (t < STAMP_END) state.phase = 'stamp';
+  return state;
 }

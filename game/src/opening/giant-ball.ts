@@ -1,101 +1,133 @@
 import * as THREE from 'three/webgpu';
-import { PALETTE } from '../world/palette';
+import { createBallSeams } from './ball-seam';
+import { createBallStamp } from './ball-stamp';
+import { easeOutBack } from './opening-timeline';
 
-const RADIUS = 4.0;
-const STITCH_COUNT = 180;
-const STITCHES_PER_ROW = 90;
+// The giant Test ball the kit becomes (docs/03): four red leather quarters, a raised main seam
+// with six rows of stitching, two quarter seams, and a gold maker's stamp on one quarter.
 
-function computeOvershootScale(p: number): number {
-  const c = Math.max(0, Math.min(1, p));
-  if (c <= 0) return 0;
-  if (c < 0.85) {
-    return (c / 0.85) * 1.05;
-  }
-  return 1.05 - ((c - 0.85) / 0.15) * 0.05;
-}
+export const BALL_RADIUS = 4;
 
-function setupStitchMatrices(mesh: THREE.InstancedMesh): void {
-  const dummy = new THREE.Object3D();
-  for (let i = 0; i < STITCHES_PER_ROW; i++) {
-    const theta = (i / STITCHES_PER_ROW) * Math.PI * 2;
-    // Row 1 (upper stitch row)
-    const x1 = Math.cos(theta) * (RADIUS + 0.015);
-    const z1 = Math.sin(theta) * (RADIUS + 0.015);
-    dummy.position.set(x1, 0.07, z1);
-    dummy.rotation.set(0, -theta, Math.PI / 4);
-    dummy.updateMatrix();
-    mesh.setMatrixAt(i, dummy.matrix);
+/** Ball-local direction of the stamp's centre: the middle of the upper, +Z quarter. */
+export const STAMP_DIR = new THREE.Vector3(0, 1, 1).normalize();
+/** Ball-local "up" of the stamp's lettering, so it can be turned upright to the camera. */
+export const STAMP_UP = new THREE.Vector3(0, 1, -1).normalize();
 
-    // Row 2 (lower stitch row, interleaved)
-    const theta2 = theta + Math.PI / STITCHES_PER_ROW;
-    const x2 = Math.cos(theta2) * (RADIUS + 0.015);
-    const z2 = Math.sin(theta2) * (RADIUS + 0.015);
-    dummy.position.set(x2, -0.07, z2);
-    dummy.rotation.set(0, -theta2, -Math.PI / 4);
-    dummy.updateMatrix();
-    mesh.setMatrixAt(STITCHES_PER_ROW + i, dummy.matrix);
-  }
-  mesh.instanceMatrix.needsUpdate = true;
-}
+// Each quarter: [phiStart, thetaStart]. The upper hemisphere splits along the XY plane and the
+// lower along the YZ plane, so the two quarter seams cross at right angles like a real ball.
+const QUARTERS: Array<[number, number]> = [
+  [0, 0],
+  [Math.PI, 0],
+  [Math.PI / 2, Math.PI / 2],
+  [(3 * Math.PI) / 2, Math.PI / 2]
+];
 
 export interface GiantBall {
   group: THREE.Group;
-  setAssembled: (p: number) => void;
+  setPanels: (p: number) => void;
   setSeam: (p: number) => void;
+  setStamp: (p: number) => void;
   dispose: () => void;
 }
 
-/** Giant red leather cricket ball assembled high above the Ahmedabad hub. */
+/** A soft grain so the leather catches the light unevenly, like a polished new ball. */
+function createGrainTexture(): THREE.CanvasTexture {
+  const size = 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    const img = ctx.createImageData(size, size);
+    for (let i = 0; i < size * size; i++) {
+      const v = 218 + Math.floor(Math.random() * 37);
+      img.data[i * 4] = img.data[i * 4 + 1] = img.data[i * 4 + 2] = v;
+      img.data[i * 4 + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(6, 3);
+  return tex;
+}
+
+interface Quarter {
+  mesh: THREE.Mesh;
+  out: THREE.Vector3;
+  spin: THREE.Vector3;
+}
+
+function createQuarters(mat: THREE.Material, geos: THREE.BufferGeometry[]): Quarter[] {
+  return QUARTERS.map(([phi, theta]) => {
+    const geo = new THREE.SphereGeometry(BALL_RADIUS, 48, 24, phi, Math.PI, theta, Math.PI / 2);
+    geos.push(geo);
+    const mesh = new THREE.Mesh(geo, mat);
+    // Where the quarter's middle points: it flies in along this line.
+    const mid = phi + Math.PI / 2;
+    const th = theta + Math.PI / 4;
+    const out = new THREE.Vector3(
+      -Math.cos(mid) * Math.sin(th),
+      Math.cos(th),
+      Math.sin(mid) * Math.sin(th)
+    ).normalize();
+    const spin = new THREE.Vector3().crossVectors(out, new THREE.Vector3(0.3, 1, 0.2)).normalize();
+    return { mesh, out, spin };
+  });
+}
+
 export function createGiantBall(): GiantBall {
   const group = new THREE.Group();
   group.name = 'giant-ball';
-  group.visible = false;
-  group.scale.setScalar(0);
-
-  const ballGeo = new THREE.SphereGeometry(RADIUS, 32, 24);
-  const ballMat = new THREE.MeshStandardMaterial({
-    color: PALETTE.leather,
-    roughness: 0.45,
-    metalness: 0.05
+  const geos: THREE.BufferGeometry[] = [];
+  const grain = createGrainTexture();
+  const leather = new THREE.MeshPhysicalMaterial({
+    color: 0x9a1f17,
+    map: grain,
+    roughnessMap: grain,
+    roughness: 0.5,
+    clearcoat: 0.55,
+    clearcoatRoughness: 0.35,
+    side: THREE.DoubleSide
   });
-  const sphereMesh = new THREE.Mesh(ballGeo, ballMat);
-  group.add(sphereMesh);
+  const quarters = createQuarters(leather, geos);
+  for (const q of quarters) group.add(q.mesh);
 
-  const creamMat = new THREE.MeshStandardMaterial({
-    color: PALETTE.cream,
-    roughness: 0.45,
-    metalness: 0.05
-  });
+  const seams = createBallSeams(BALL_RADIUS);
+  group.add(seams.group);
 
-  const seamBandGeo = new THREE.TorusGeometry(RADIUS + 0.01, 0.04, 8, 90);
-  const seamBand = new THREE.Mesh(seamBandGeo, creamMat);
-  seamBand.rotation.x = Math.PI / 2;
-  group.add(seamBand);
+  const stamp = createBallStamp(BALL_RADIUS);
+  stamp.group.quaternion.setFromRotationMatrix(
+    new THREE.Matrix4().makeBasis(
+      new THREE.Vector3().crossVectors(STAMP_UP, STAMP_DIR),
+      STAMP_UP,
+      STAMP_DIR
+    )
+  );
+  group.add(stamp.group);
 
-  const stitchGeo = new THREE.CapsuleGeometry(0.02, 0.08, 4, 8);
-  const stitchMesh = new THREE.InstancedMesh(stitchGeo, creamMat, STITCH_COUNT);
-  setupStitchMatrices(stitchMesh);
-  stitchMesh.count = 0;
-  group.add(stitchMesh);
+  const setPanels = (p: number): void => {
+    const c = Math.max(0, Math.min(1, p));
+    const e = easeOutBack(c);
+    for (const q of quarters) {
+      q.mesh.visible = c > 0;
+      q.mesh.position.copy(q.out).multiplyScalar(3.2 * (1 - e));
+      q.mesh.quaternion.setFromAxisAngle(q.spin, 1.4 * (1 - e));
+      q.mesh.scale.setScalar(0.55 + 0.45 * Math.min(1, e));
+    }
+  };
+  setPanels(0);
 
   return {
     group,
-    setAssembled: (p: number) => {
-      const scale = computeOvershootScale(p);
-      group.scale.setScalar(scale);
-      group.visible = scale > 0;
-    },
-    setSeam: (p: number) => {
-      const c = Math.max(0, Math.min(1, p));
-      stitchMesh.count = Math.floor(c * STITCH_COUNT);
-      stitchMesh.instanceMatrix.needsUpdate = true;
-    },
+    setPanels,
+    setSeam: seams.setSeam,
+    setStamp: stamp.setStamp,
     dispose: () => {
-      ballGeo.dispose();
-      ballMat.dispose();
-      creamMat.dispose();
-      seamBandGeo.dispose();
-      stitchGeo.dispose();
+      for (const g of geos) g.dispose();
+      leather.dispose();
+      grain.dispose();
+      seams.dispose();
+      stamp.dispose();
     }
   };
 }

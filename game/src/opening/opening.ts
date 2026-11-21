@@ -1,19 +1,22 @@
 import * as THREE from 'three/webgpu';
 import type { GameState } from '../types';
 import type { SoundManager } from '../audio/audio';
-import { createGiantBall, type GiantBall } from './giant-ball';
+import { createGiantBall } from './giant-ball';
 import { createKitPieces } from './kit-models';
 import { setupActivePieces, updateActivePieces, collapseActivePieces } from './opening-pieces';
 import { createOpeningOverlay } from './opening-overlay';
 import { startBowlAnimation, runReducedMotionBowl } from './opening-bowl';
+import { createOpeningSky } from './opening-sky';
+import { createOpeningClouds } from './opening-clouds';
+import { OPENING_CENTRE, orbitCamera, stampFacing } from './opening-pose';
+import { STAMP_END, openingPhase } from './opening-timeline';
 
-const BALL_POS = new THREE.Vector3(0, 55, -10);
-// The camera looks slightly down past the ball, so the ball sits in the upper half (clear of
-// the name and button) and the stadium's roof ring and LED lights show below it.
-const CAM_POS = new THREE.Vector3(0, 58, 9);
-const CAM_LOOK = new THREE.Vector3(0, 50, -10);
-const READY_TIME = 3.6;
+// docs/03, "Opening": under an overcast Test-match sky the kit gathers into a giant red ball,
+// the seam stitches itself, the gold HT stamp turns to the camera, then Play bowls it down
+// through the clouds into the Ahmedabad hub.
+
 const SEEN_KEY = 'tour-opening-seen';
+const SPIN_AXIS = new THREE.Vector3(0.35, 1, 0.15).normalize();
 
 function checkSeen(): boolean {
   try {
@@ -23,18 +26,16 @@ function checkSeen(): boolean {
   }
 }
 
-function checkReducedMotion(): boolean {
-  return (
-    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  );
-}
-
 function markSeen(): void {
   try {
     localStorage.setItem(SEEN_KEY, '1');
   } catch {
-    // localStorage blocked
+    // Storage can be blocked; the opening just plays in full next time.
   }
+}
+
+function checkReducedMotion(): boolean {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
 function bindSkip(onSkip: () => void): () => void {
@@ -50,7 +51,31 @@ export interface OpeningController {
   dispose: () => void;
 }
 
-/** Orchestrates the cricket kit flying together into the giant red ball in the hub sky. */
+function createStage(scene: THREE.Scene, aspect: number) {
+  const sky = createOpeningSky(scene);
+  const clouds = createOpeningClouds(OPENING_CENTRE);
+  const ball = createGiantBall();
+  ball.group.position.copy(OPENING_CENTRE);
+  const cluster = new THREE.Group();
+  cluster.position.copy(OPENING_CENTRE);
+  scene.add(clouds.group, ball.group, cluster);
+
+  const camPos = new THREE.Vector3();
+  orbitCamera(0, aspect, camPos, new THREE.Vector3());
+  const kit = createKitPieces();
+  const pieces = setupActivePieces(cluster, kit, camPos.sub(OPENING_CENTRE));
+
+  const dispose = (): void => {
+    scene.remove(clouds.group, ball.group, cluster);
+    clouds.dispose();
+    ball.dispose();
+    for (const k of kit) k.dispose();
+    sky.dispose();
+  };
+  return { sky, clouds, ball, pieces, facing: new THREE.Quaternion(), dispose };
+}
+
+/** Plays the opening over the hub. The hub is already built underneath, hidden in the fog. */
 export function playOpening(params: {
   state: GameState;
   sound: SoundManager;
@@ -59,27 +84,23 @@ export function playOpening(params: {
 }): OpeningController {
   const { state, sound, base, onDone } = params;
   document.body.classList.add('opening');
-
-  const ball: GiantBall = createGiantBall();
-  ball.group.position.copy(BALL_POS);
-  state.scene.add(ball.group);
-
-  const rawPieces = createKitPieces();
-  const activePieces = setupActivePieces(state.scene, rawPieces);
+  const stage = createStage(state.scene, state.camera.aspect);
+  const { sky, clouds, ball, pieces, facing } = stage;
 
   let elapsed = 0;
+  let orbitT = 0;
+  const still = checkReducedMotion();
   let isReady = false;
   let disposed = false;
-  let removeSkip = (): void => {};
+  let removeSkip = (): void => undefined;
 
-  const jumpToReady = (): void => {
-    elapsed = READY_TIME;
-    isReady = true;
-    collapseActivePieces(activePieces);
-    ball.setAssembled(1);
-    ball.setSeam(1);
-    overlay.show();
+  const cleanup = (): void => {
+    if (disposed) return;
+    disposed = true;
     removeSkip();
+    overlay.destroy();
+    document.body.classList.remove('opening');
+    stage.dispose();
   };
 
   const overlay = createOpeningOverlay({
@@ -88,51 +109,53 @@ export function playOpening(params: {
       markSeen();
       removeSkip();
       overlay.hide();
-      const bowlParams = { state, sound, ball, cleanup, onDone };
-      if (checkReducedMotion()) {
-        void runReducedMotionBowl(bowlParams);
-      } else {
-        startBowlAnimation(bowlParams);
-      }
+      const bowl = { state, sound, ball, sky, cleanup, onDone };
+      if (still) void runReducedMotionBowl(bowl);
+      else startBowlAnimation(bowl);
     }
   });
 
-  removeSkip = bindSkip(() => {
-    if (!isReady) jumpToReady();
-  });
-
-  if (checkSeen() || checkReducedMotion()) jumpToReady();
+  const jumpToReady = (): void => {
+    if (isReady) return;
+    isReady = true;
+    elapsed = STAMP_END;
+    collapseActivePieces(pieces);
+    ball.setPanels(1);
+    ball.setSeam(1);
+    ball.setStamp(1);
+    ball.group.quaternion.copy(stampFacing(state.camera.position, facing));
+    overlay.show();
+    removeSkip();
+  };
 
   state.cameraShot = (camera, look, dt) => {
-    camera.position.copy(CAM_POS);
-    look.copy(CAM_LOOK);
-    if (isReady) {
-      ball.group.rotation.y += 0.25 * dt;
-      return false;
+    if (!still) orbitT += dt;
+    orbitCamera(orbitT, camera.aspect, camera.position, look);
+    sky.update(camera);
+    clouds.update(dt);
+    if (!isReady) {
+      elapsed += dt;
+      const ph = openingPhase(elapsed);
+      updateActivePieces(pieces, elapsed, ph.panels);
+      ball.setPanels(ph.panels);
+      ball.setSeam(ph.seam);
+      ball.setStamp(ph.stamp);
+      if (ph.seam < 0.4) ball.group.rotateOnAxis(SPIN_AXIS, dt * 0.7);
+      if (ph.phase === 'ready') jumpToReady();
     }
-    elapsed += dt;
-    if (elapsed < 3.0) {
-      ball.setAssembled(updateActivePieces(activePieces, elapsed, BALL_POS));
-    } else if (elapsed < READY_TIME) {
-      collapseActivePieces(activePieces);
-      ball.setAssembled(1);
-      ball.setSeam((elapsed - 3.0) / 0.6);
-    } else {
-      jumpToReady();
+    // From late in the stitching, the ball turns its stamp to the camera and holds it there.
+    if (isReady || openingPhase(elapsed).seam >= 0.4) {
+      stampFacing(camera.position, facing);
+      ball.group.quaternion.slerp(facing, 1 - Math.exp(-4 * dt));
     }
     return false;
   };
 
-  const cleanup = (): void => {
-    if (disposed) return;
-    disposed = true;
-    removeSkip();
-    overlay.destroy();
-    document.body.classList.remove('opening');
-    state.scene.remove(ball.group);
-    ball.dispose();
-    activePieces.forEach((item) => item.piece.dispose());
-  };
+  removeSkip = bindSkip(jumpToReady);
+  if (checkSeen() || still) {
+    orbitCamera(0, state.camera.aspect, state.camera.position, state.cameraLook);
+    jumpToReady();
+  }
 
   return {
     dispose: () => {

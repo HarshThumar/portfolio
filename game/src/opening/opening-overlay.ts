@@ -5,18 +5,11 @@ export interface OpeningOverlay {
   destroy: () => void;
 }
 
-/** Overlay displaying name, positioning, and play button once the ball is assembled. */
+/** The positioning line and the play button, shown under the ball once it is stamped. */
 export function createOpeningOverlay(params: { base: string; onPlay: () => void }): OpeningOverlay {
   const container = document.createElement('div');
   container.className = 'opening-overlay';
   container.setAttribute('aria-live', 'polite');
-
-  const card = document.createElement('div');
-  card.className = 'opening-card';
-
-  const name = document.createElement('h1');
-  name.className = 'opening-name';
-  name.textContent = 'HARSH THUMAR';
 
   const tagline = document.createElement('p');
   tagline.className = 'opening-tagline';
@@ -49,8 +42,7 @@ export function createOpeningOverlay(params: { base: string; onPlay: () => void 
   scorecardLink.textContent = '[[COPY: link to the Scorecard view]]';
 
   footer.append(soundNote, sep, scorecardLink);
-  card.append(name, tagline, playBtn, footer);
-  container.appendChild(card);
+  container.append(tagline, playBtn, footer);
   document.body.appendChild(container);
 
   return {

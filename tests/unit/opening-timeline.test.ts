@@ -1,97 +1,84 @@
 import { describe, it, expect } from 'vitest';
 import {
-  GATHER_START,
   GATHER_END,
+  GATHER_START,
+  PANELS_END,
+  STAMP_END,
   STITCH_END,
-  pieceProgress,
-  openingPhase,
   clamp,
   easeInOutCubic,
-  easeOutCubic
+  easeOutBack,
+  easeOutCubic,
+  openingPhase,
+  pieceProgress
 } from '../../game/src/opening/opening-timeline';
 
-describe('opening-timeline', () => {
-  describe('clamp & easing', () => {
-    it('clamps values correctly', () => {
-      expect(clamp(-0.5)).toBe(0);
-      expect(clamp(1.5)).toBe(1);
-      expect(clamp(0.4)).toBe(0.4);
-    });
-
-    it('eases monotonically', () => {
-      let prevIn = -1;
-      let prevOut = -1;
-      for (let i = 0; i <= 20; i++) {
-        const t = i / 20;
-        const curIn = easeInOutCubic(t);
-        const curOut = easeOutCubic(t);
-        expect(curIn).toBeGreaterThanOrEqual(prevIn);
-        expect(curOut).toBeGreaterThanOrEqual(prevOut);
-        prevIn = curIn;
-        prevOut = curOut;
-      }
-      expect(easeInOutCubic(0)).toBe(0);
-      expect(easeInOutCubic(1)).toBe(1);
-      expect(easeOutCubic(0)).toBe(0);
-      expect(easeOutCubic(1)).toBe(1);
-    });
+describe('opening timeline', () => {
+  it('clamps', () => {
+    expect(clamp(-0.5)).toBe(0);
+    expect(clamp(1.5)).toBe(1);
+    expect(clamp(0.4)).toBe(0.4);
   });
 
-  describe('pieceProgress', () => {
-    it('returns 0 before delay and 1 after delay + duration', () => {
-      expect(pieceProgress(0.2, 0.5, 1.0)).toBe(0);
-      expect(pieceProgress(0.5, 0.5, 1.0)).toBe(0);
-      expect(pieceProgress(1.5, 0.5, 1.0)).toBe(1);
-      expect(pieceProgress(2.0, 0.5, 1.0)).toBe(1);
-    });
-
-    it('progresses monotonically between delay and delay + duration', () => {
-      const delay = 0.4;
-      const duration = 0.8;
-      let prev = 0;
-      for (let i = 0; i <= 20; i++) {
-        const t = delay + (i / 20) * duration;
-        const p = pieceProgress(t, delay, duration);
-        expect(p).toBeGreaterThanOrEqual(prev);
-        expect(p).toBeLessThanOrEqual(1);
-        prev = p;
-      }
-      expect(prev).toBe(1);
-    });
+  it('eases from 0 to 1 and the in/out curves never go backwards', () => {
+    let prevIn = -1;
+    let prevOut = -1;
+    for (let i = 0; i <= 40; i++) {
+      const t = i / 40;
+      expect(easeInOutCubic(t)).toBeGreaterThanOrEqual(prevIn);
+      expect(easeOutCubic(t)).toBeGreaterThanOrEqual(prevOut);
+      prevIn = easeInOutCubic(t);
+      prevOut = easeOutCubic(t);
+    }
+    expect(easeInOutCubic(1)).toBe(1);
+    expect(easeOutBack(0)).toBeCloseTo(0);
+    expect(easeOutBack(1)).toBeCloseTo(1);
   });
 
-  describe('openingPhase', () => {
-    it('identifies phase boundaries accurately', () => {
-      expect(openingPhase(0).phase).toBe('gather');
-      expect(openingPhase(GATHER_START).phase).toBe('gather');
-      expect(openingPhase(2.0).phase).toBe('gather');
+  it('lets the quarters overshoot a little before settling (the snap)', () => {
+    const peak = Math.max(...Array.from({ length: 50 }, (_, i) => easeOutBack(i / 49)));
+    expect(peak).toBeGreaterThan(1);
+    expect(peak).toBeLessThan(1.15);
+  });
 
-      expect(openingPhase(GATHER_END).phase).toBe('stitch');
-      expect(openingPhase(3.3).phase).toBe('stitch');
+  it('flies each piece only inside its own window', () => {
+    expect(pieceProgress(0.2, 0.5, 1)).toBe(0);
+    expect(pieceProgress(1.5, 0.5, 1)).toBe(1);
+    expect(pieceProgress(1.0, 0.5, 1)).toBeCloseTo(0.5);
+    expect(pieceProgress(0.5, 0.5, 0)).toBe(1);
+  });
 
-      expect(openingPhase(STITCH_END).phase).toBe('ready');
-      expect(openingPhase(5.0).phase).toBe('ready');
-    });
+  it('runs the phases in the order of docs/03', () => {
+    expect(openingPhase(0).phase).toBe('gather');
+    expect(openingPhase(GATHER_END - 0.01).phase).toBe('gather');
+    expect(openingPhase(GATHER_END).phase).toBe('panels');
+    expect(openingPhase(PANELS_END).phase).toBe('stitch');
+    expect(openingPhase(STITCH_END).phase).toBe('stamp');
+    expect(openingPhase(STAMP_END).phase).toBe('ready');
+    expect(openingPhase(99).phase).toBe('ready');
+  });
 
-    it('maintains monotonic progress across phases', () => {
-      let prevAssembled = 0;
-      let prevSeam = 0;
+  it('finishes each step before the next starts', () => {
+    const atPanels = openingPhase(GATHER_END + 0.1);
+    expect(atPanels.gather).toBe(1);
+    expect(atPanels.seam).toBe(0);
+    const atStitch = openingPhase(PANELS_END + 0.1);
+    expect(atStitch.panels).toBe(1);
+    expect(atStitch.stamp).toBe(0);
+    const ready = openingPhase(STAMP_END);
+    expect([ready.gather, ready.panels, ready.seam, ready.stamp]).toEqual([1, 1, 1, 1]);
+    expect(openingPhase(GATHER_START - 0.1).gather).toBe(0);
+  });
 
-      for (let t = 0; t <= 4.0; t += 0.1) {
-        const { assembled, seam } = openingPhase(t);
-        expect(assembled).toBeGreaterThanOrEqual(prevAssembled);
-        expect(assembled).toBeLessThanOrEqual(1);
-        expect(seam).toBeGreaterThanOrEqual(prevSeam);
-        expect(seam).toBeLessThanOrEqual(1);
-
-        prevAssembled = assembled;
-        prevSeam = seam;
-      }
-
-      const ready = openingPhase(4.0);
-      expect(ready.phase).toBe('ready');
-      expect(ready.assembled).toBe(1);
-      expect(ready.seam).toBe(1);
-    });
+  it('only ever moves forward', () => {
+    let prev = openingPhase(0);
+    for (let t = 0; t <= STAMP_END + 1; t += 0.05) {
+      const cur = openingPhase(t);
+      expect(cur.gather).toBeGreaterThanOrEqual(prev.gather);
+      expect(cur.panels).toBeGreaterThanOrEqual(prev.panels);
+      expect(cur.seam).toBeGreaterThanOrEqual(prev.seam);
+      expect(cur.stamp).toBeGreaterThanOrEqual(prev.stamp);
+      prev = cur;
+    }
   });
 });

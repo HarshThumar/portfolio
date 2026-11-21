@@ -142,18 +142,20 @@ button {
   transition: left 0.4s ease-out;
 }
 
-/* The opening (game/src/opening): the name and play button under the giant ball. */
+/* The opening (game/src/opening): the line and play button under the giant ball. */
 body.opening .hud {
   visibility: hidden;
 }
 
 .opening-overlay {
   position: fixed;
-  inset: auto 0 5vh;
+  inset: auto 0 6vh;
   z-index: 1150;
-  display: flex;
-  justify-content: center;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
   padding: 0 16px;
+  text-align: center;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.6s ease;
@@ -164,31 +166,14 @@ body.opening .hud {
   pointer-events: auto;
 }
 
-.opening-card {
-  display: grid;
-  justify-items: center;
-  gap: 8px;
-  max-width: 520px;
-  padding: 14px 24px;
-  text-align: center;
-  /* A paper card, like the rest of the UI, so it reads over a day or a night sky. */
-  background: var(--cream);
-  border: 2px solid var(--ink);
-  border-radius: var(--radius);
-  box-shadow: 4px 4px 0 var(--ink);
-}
-
-.opening-name {
-  font-family: var(--font-display);
-  font-size: clamp(24px, 4.5vw, 40px);
-  letter-spacing: 1px;
-  white-space: nowrap;
-  color: var(--ink);
-}
-
 .opening-tagline {
-  font-size: clamp(15px, 2vw, 18px);
+  max-width: 34ch;
+  font-size: clamp(16px, 2.2vw, 20px);
   color: var(--ink);
+  /* Straight on the grey sky, with a soft cream halo so it stays readable over cloud. */
+  text-shadow:
+    0 0 12px rgb(243 234 211 / 0.9),
+    0 0 2px rgb(243 234 211 / 0.9);
 }
 
 .opening-play-btn {
@@ -206,9 +191,12 @@ body.opening .hud {
 
 .opening-footer {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 8px;
   font-size: 13px;
   color: var(--ink);
+  text-shadow: 0 0 8px rgb(243 234 211 / 0.9);
 }
 
 .opening-link {

@@ -1,126 +1,104 @@
 import * as THREE from 'three/webgpu';
 import type { KitPiece } from './kit-models';
-import { pieceProgress } from './opening-timeline';
+import { easeInOutCubic, pieceProgress } from './opening-timeline';
+
+// The kit drifting in from every side of the view and gathering into a tumbling cluster at the
+// centre (docs/03: "all the things coming in"). Positions are local to `cluster`, which sits at
+// the ball's centre.
+
+// Kit is drawn about twice life size so each piece reads at a glance.
+const PIECE_SCALE = 2.2;
+const ORBIT_SPEED = 0.35;
 
 export interface ActivePiece {
   piece: KitPiece;
-  startPos: THREE.Vector3;
-  curveOffset: THREE.Vector3;
+  start: THREE.Vector3;
+  target: THREE.Vector3;
+  bend: THREE.Vector3;
   startRot: THREE.Euler;
   spinAxis: THREE.Vector3;
+  spinRate: number;
   delay: number;
   duration: number;
 }
 
-const BALL_Y = 55;
-const BALL_Z = -10;
+const UP = new THREE.Vector3(0, 1, 0);
 
-/** Scatters kit pieces 16–28 m around the ball and configures flight paths. */
-// Kit is drawn about twice life size so each piece reads at a glance from the camera.
-const PIECE_SCALE = 2.2;
-export function setupActivePieces(scene: THREE.Scene, pieces: KitPiece[]): ActivePiece[] {
-  const active: ActivePiece[] = [];
+function randomDir(out: THREE.Vector3): THREE.Vector3 {
+  const u = Math.random() * 2 - 1;
+  const a = Math.random() * Math.PI * 2;
+  const s = Math.sqrt(1 - u * u);
+  return out.set(Math.cos(a) * s, u * 0.7, Math.sin(a) * s).normalize();
+}
+
+/** A start point 16–30 m out, never behind or right beside the camera. */
+function pickStart(camLocal: THREE.Vector3): THREE.Vector3 {
+  const camDir = camLocal.clone().normalize();
+  const dir = new THREE.Vector3();
+  const start = new THREE.Vector3();
+  for (let tries = 0; tries < 30; tries++) {
+    randomDir(dir);
+    if (dir.dot(camDir) > 0.35) continue;
+    start.copy(dir).multiplyScalar(16 + Math.random() * 14);
+    if (start.distanceTo(camLocal) > 12) break;
+  }
+  return start;
+}
+
+export function setupActivePieces(
+  cluster: THREE.Object3D,
+  pieces: KitPiece[],
+  camLocal: THREE.Vector3
+): ActivePiece[] {
   const total = pieces.length;
-
-  for (let i = 0; i < total; i++) {
-    const piece = pieces[i]!;
-    const dist = 16 + Math.random() * 12;
-    // Disperse in front of and around camera
-    const angle = (i / total) * Math.PI * 1.8 - 0.9 * Math.PI + (Math.random() - 0.5) * 0.3;
-    const dy = (Math.random() - 0.5) * 16;
-
-    const startPos = new THREE.Vector3(
-      Math.sin(angle) * dist,
-      BALL_Y + dy,
-      BALL_Z - Math.cos(angle) * dist * 0.65
-    );
-
-    const curveOffset = new THREE.Vector3(
-      (Math.random() - 0.5) * 14,
-      (Math.random() - 0.5) * 8,
-      (Math.random() - 0.5) * 10
-    );
-
-    const startRot = new THREE.Euler(
-      Math.random() * Math.PI * 2,
-      Math.random() * Math.PI * 2,
-      Math.random() * Math.PI * 2
-    );
-
-    const spinAxis = new THREE.Vector3(
-      Math.random() - 0.5,
-      Math.random() - 0.5,
-      Math.random() - 0.5
-    ).normalize();
-
-    piece.object.position.copy(startPos);
-    piece.object.rotation.copy(startRot);
-    scene.add(piece.object);
-
-    active.push({
+  return pieces.map((piece, i) => {
+    const start = pickStart(camLocal);
+    const target = randomDir(new THREE.Vector3()).multiplyScalar(1.2 + Math.random() * 2.3);
+    const bend = new THREE.Vector3()
+      .crossVectors(start, UP)
+      .normalize()
+      .multiplyScalar((Math.random() - 0.5) * 12);
+    bend.y += (Math.random() - 0.5) * 6;
+    piece.object.position.copy(start);
+    piece.object.scale.setScalar(PIECE_SCALE);
+    cluster.add(piece.object);
+    return {
       piece,
-      startPos,
-      curveOffset,
-      startRot,
-      spinAxis,
-      delay: 0.3 + (i / total) * 1.4 + Math.random() * 0.2,
-      duration: 1.1 + Math.random() * 0.3
-    });
-  }
-
-  return active;
+      start,
+      target,
+      bend,
+      startRot: new THREE.Euler(Math.random() * 6.28, Math.random() * 6.28, Math.random() * 6.28),
+      spinAxis: randomDir(new THREE.Vector3()),
+      spinRate: 0.6 + Math.random() * 0.8,
+      delay: 0.3 + (i / total) * 1.2 + Math.random() * 0.15,
+      duration: 0.9 + Math.random() * 0.35
+    };
+  });
 }
 
-const currentPos = new THREE.Vector3();
+const goal = new THREE.Vector3();
 
-/** Updates piece trajectories towards the ball centre; returns average assembled fraction. */
-export function updateActivePieces(
-  activePieces: ActivePiece[],
-  t: number,
-  targetPos: THREE.Vector3
-): number {
-  let totalProgress = 0;
-
-  for (const item of activePieces) {
+/** Flies the kit in and keeps the cluster tumbling; `panels` (0→1) shrinks it into the ball. */
+export function updateActivePieces(active: ActivePiece[], t: number, panels: number): void {
+  const shrink = easeInOutCubic(Math.min(1, panels / 0.7));
+  for (const item of active) {
+    const obj = item.piece.object;
     const p = pieceProgress(t, item.delay, item.duration);
-    totalProgress += p;
-
-    if (p <= 0) {
-      item.piece.object.position.copy(item.startPos);
-      item.piece.object.scale.setScalar(PIECE_SCALE);
-      item.piece.object.visible = true;
-      continue;
-    }
-
-    if (p >= 1) {
-      item.piece.object.visible = false;
-      item.piece.object.scale.setScalar(0);
-      continue;
-    }
-
-    // Curved flight path using quadratic midpoint
-    const arcHeight = 4 * p * (1 - p);
-    currentPos.lerpVectors(item.startPos, targetPos, p);
-    currentPos.addScaledVector(item.curveOffset, arcHeight);
-    item.piece.object.position.copy(currentPos);
-
-    // Spin during flight
-    item.piece.object.rotation.copy(item.startRot);
-    item.piece.object.rotateOnAxis(item.spinAxis, p * Math.PI * 4);
-
-    // Shrink into ball surface as it arrives
-    const scale = p > 0.82 ? Math.max(0, (1 - p) / 0.18) : 1;
-    item.piece.object.scale.setScalar(scale * PIECE_SCALE);
-    item.piece.object.visible = scale > 0.01;
+    // Once gathered, the cluster slowly turns round its centre.
+    goal.copy(item.target).applyAxisAngle(UP, t * ORBIT_SPEED);
+    obj.position.lerpVectors(item.start, goal, p).addScaledVector(item.bend, 4 * p * (1 - p));
+    // Before its flight a piece is already drifting slowly inward, so nothing waits still.
+    if (p <= 0) obj.position.multiplyScalar(1 + 0.3 * (1 - t / item.delay));
+    obj.position.multiplyScalar(1 - shrink);
+    obj.rotation.copy(item.startRot);
+    obj.rotateOnAxis(item.spinAxis, t * item.spinRate + p * Math.PI * 2);
+    const scale = PIECE_SCALE * (1 - shrink);
+    obj.scale.setScalar(scale);
+    obj.visible = scale > 0.01;
   }
-
-  return totalProgress / activePieces.length;
 }
 
-/** Instantly hides and collapses all kit pieces (for skips / returning visitors). */
-export function collapseActivePieces(activePieces: ActivePiece[]): void {
-  for (const item of activePieces) {
-    item.piece.object.visible = false;
-    item.piece.object.scale.setScalar(0);
-  }
+/** Hides the kit at once (skips and returning visitors). */
+export function collapseActivePieces(active: ActivePiece[]): void {
+  for (const item of active) item.piece.object.visible = false;
 }
