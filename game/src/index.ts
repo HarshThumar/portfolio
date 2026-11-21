@@ -18,7 +18,19 @@ import { createSharedMaterials } from './world/palette';
 import { createGroundBase } from './world/ground-base';
 import { createRoller } from './vehicle/roller';
 import { setupTouchAndClickControls } from './vehicle/touch-controls';
-import type { GameEvents, GameInstance, GameOptions, GameState, VehicleState } from './types';
+import { createStumps } from './interactions/stumps';
+import { createBoundaryDetector } from './interactions/boundary';
+import { createInfoPost } from './interactions/info-post';
+import { createSoundManager, type SoundManager } from './audio/audio';
+import { createStampBanner, type StampBanner } from './ui/stamp-banner';
+import type {
+  GameEvents,
+  GameInstance,
+  GameOptions,
+  GameState,
+  Stage,
+  VehicleState
+} from './types';
 
 export type { GameEvents, GameInstance, GameOptions, GameState, VehicleState };
 
@@ -60,6 +72,62 @@ async function createRenderer(canvas: HTMLCanvasElement): Promise<{
   const isWebGPU = Boolean((renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend);
   const backend = isWebGPU ? 'WebGPU' : 'WebGL2';
   return { renderer, backend };
+}
+
+function setupInteractions(
+  scene: THREE.Scene,
+  world: RAPIER.World,
+  materials: ReturnType<typeof createSharedMaterials>,
+  stageInteractions: ReturnType<typeof createStageInteractions>,
+  soundManager: SoundManager,
+  stampBanner: StampBanner
+): { dispose: () => void } {
+  const stumps = createStumps(scene, world, RAPIER, materials, () => {
+    soundManager.playStumpClatter();
+    soundManager.playHowzat();
+    stampBanner.show('HOWZAT!');
+  });
+
+  const boundary = createBoundaryDetector(() => {
+    soundManager.playSixRoar();
+    stampBanner.show('SIX!');
+  });
+
+  const infoPost = createInfoPost(scene, world, RAPIER, materials, { x: 22, y: 0, z: 0 }, () => {
+    soundManager.playBell();
+    stampBanner.show('INFO POST');
+  });
+
+  stageInteractions.addUpdatable(stumps.update);
+  stageInteractions.addUpdatable(boundary.update);
+  stageInteractions.addUpdatable(infoPost.update);
+
+  return {
+    dispose: () => {
+      stumps.dispose();
+      infoPost.dispose();
+      stageInteractions.clear();
+    }
+  };
+}
+
+function assembleStages(
+  stageInputs: Stage,
+  stageInteractions: Stage,
+  updateDebugPanel: (state: GameState) => void
+): Stage[] {
+  return [
+    stageInputs,
+    createStageVehicle(),
+    createStagePhysics(),
+    createStageInterpolate(),
+    stageInteractions,
+    createStageWorld(),
+    createStageCamera(),
+    createStageAudio(),
+    createStageRender(),
+    createStageUi(updateDebugPanel)
+  ];
 }
 
 function createInitialState(params: {
@@ -157,6 +225,8 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
     typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debug');
   const shouldDebug = options.debug ?? isDebugUrl;
   const debugController = createDebugPanel(shouldDebug);
+  const soundManager = createSoundManager();
+  const stampBanner = createStampBanner();
   const events = new TypedEmitter<GameEvents>();
 
   const state = createInitialState({
@@ -176,20 +246,17 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
   const stageInputs = createStageInputs();
   const cleanupInputs = stageInputs.setup(state);
   const touchControls = setupTouchAndClickControls(state);
+  const stageInteractions = createStageInteractions();
+  const interactionCleanup = setupInteractions(
+    scene,
+    world,
+    materials,
+    stageInteractions,
+    soundManager,
+    stampBanner
+  );
 
-  const stages = [
-    stageInputs,
-    createStageVehicle(),
-    createStagePhysics(),
-    createStageInterpolate(),
-    createStageInteractions(),
-    createStageWorld(),
-    createStageCamera(),
-    createStageAudio(),
-    createStageRender(),
-    createStageUi(debugController.update)
-  ];
-
+  const stages = assembleStages(stageInputs, stageInteractions, debugController.update);
   const loop = createGameLoop(state, stages);
   loop.start();
   const cleanupResize = setupResizeHandler(camera, renderer, events);
@@ -202,6 +269,8 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
       cleanupInputs();
       touchControls.destroy();
       debugController.destroy();
+      stampBanner.destroy();
+      interactionCleanup.dispose();
       groundBase.dispose();
       vehicle.model.dispose();
       materials.dispose();
