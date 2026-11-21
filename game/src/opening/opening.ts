@@ -1,13 +1,14 @@
 import * as THREE from 'three/webgpu';
 import type { GameState } from '../types';
 import type { SoundManager } from '../audio/audio';
-import { createGiantBall } from './giant-ball';
+import { createGiantBall, type GiantBall } from './giant-ball';
 import { createKitPieces } from './kit-models';
 import { setupActivePieces, updateActivePieces, collapseActivePieces } from './opening-pieces';
 import { createOpeningOverlay } from './opening-overlay';
 import { startBowlAnimation, runReducedMotionBowl } from './opening-bowl';
 import { createOpeningSky } from './opening-sky';
 import { createOpeningClouds } from './opening-clouds';
+import { createBallDrag } from './opening-drag';
 import { OPENING_CENTRE, orbitCamera, stampFacing } from './opening-pose';
 import { STAMP_END, openingPhase } from './opening-timeline';
 
@@ -47,6 +48,12 @@ function bindSkip(onSkip: () => void): () => void {
   };
 }
 
+function completeBall(ball: GiantBall): void {
+  ball.setPanels(1);
+  ball.setSeam(1);
+  ball.setStamp(1);
+}
+
 export interface OpeningController {
   dispose: () => void;
 }
@@ -64,15 +71,17 @@ function createStage(scene: THREE.Scene, aspect: number) {
   orbitCamera(0, aspect, camPos, new THREE.Vector3());
   const kit = createKitPieces();
   const pieces = setupActivePieces(cluster, kit, camPos.sub(OPENING_CENTRE));
+  const drag = createBallDrag();
 
   const dispose = (): void => {
+    drag.dispose();
     scene.remove(clouds.group, ball.group, cluster);
     clouds.dispose();
     ball.dispose();
     for (const k of kit) k.dispose();
     sky.dispose();
   };
-  return { sky, clouds, ball, pieces, facing: new THREE.Quaternion(), dispose };
+  return { sky, clouds, ball, pieces, drag, facing: new THREE.Quaternion(), dispose };
 }
 
 /** Plays the opening over the hub. The hub is already built underneath, hidden in the fog. */
@@ -85,7 +94,7 @@ export function playOpening(params: {
   const { state, sound, base, onDone } = params;
   document.body.classList.add('opening');
   const stage = createStage(state.scene, state.camera.aspect);
-  const { sky, clouds, ball, pieces, facing } = stage;
+  const { sky, clouds, ball, pieces, drag, facing } = stage;
 
   let elapsed = 0;
   let orbitT = 0;
@@ -120,12 +129,11 @@ export function playOpening(params: {
     isReady = true;
     elapsed = STAMP_END;
     collapseActivePieces(pieces);
-    ball.setPanels(1);
-    ball.setSeam(1);
-    ball.setStamp(1);
+    completeBall(ball);
     ball.group.quaternion.copy(stampFacing(state.camera.position, facing));
     overlay.show();
     removeSkip();
+    drag.enable();
   };
 
   state.cameraShot = (camera, look, dt) => {
@@ -143,7 +151,9 @@ export function playOpening(params: {
       if (ph.seam < 0.4) ball.group.rotateOnAxis(SPIN_AXIS, dt * 0.7);
       if (ph.phase === 'ready') jumpToReady();
     }
-    // From late in the stitching, the ball turns its stamp to the camera and holds it there.
+    // From late in the stitching the ball turns its stamp to the camera and holds it there,
+    // unless the visitor is spinning it.
+    if (isReady && drag.update(dt, ball.group, camera)) return false;
     if (isReady || openingPhase(elapsed).seam >= 0.4) {
       stampFacing(camera.position, facing);
       ball.group.quaternion.slerp(facing, 1 - Math.exp(-4 * dt));

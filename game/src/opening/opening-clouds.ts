@@ -1,6 +1,6 @@
 import * as THREE from 'three/webgpu';
 
-// Soft grey cloud billboards for the overcast opening: a loose shell around the ball and a
+// Soft warm-grey cloud billboards for the overcast opening: a loose shell around the ball and a
 // thick deck below it that the ball is bowled down through.
 
 export interface OpeningClouds {
@@ -29,7 +29,7 @@ function drawCloud(seed: number): THREE.CanvasTexture {
       const g = ctx.createRadialGradient(x, y, 0, x, y, r);
       // One shade per blob, fading out smoothly: lighter blobs on top, greyer underneath.
       const shade = Math.round(240 - (y / size) * 55);
-      const rgb = `${shade},${shade + 2},${shade + 6}`;
+      const rgb = `${shade + 4},${shade},${shade - 9}`;
       g.addColorStop(0, `rgba(${rgb},0.8)`);
       g.addColorStop(0.5, `rgba(${rgb},0.45)`);
       g.addColorStop(1, `rgba(${rgb},0)`);

@@ -8,12 +8,10 @@ import * as THREE from 'three/webgpu';
 const ROW_HEIGHTS = [-0.34, -0.26, -0.18, 0.18, 0.26, 0.34];
 const PER_ROW = 130;
 const MAIN_COUNT = ROW_HEIGHTS.length * PER_ROW;
-const QUARTER_PER_ARC = 56;
-const QUARTER_COUNT = QUARTER_PER_ARC * 2;
 
 export interface BallSeams {
   group: THREE.Group;
-  /** 0→1: the ridge rises, the six rows stitch round (to 0.75), then the quarter seams. */
+  /** 0→1: the ridge rises, the six rows stitch round (to 0.75), then the faint quarter seams. */
   setSeam: (p: number) => void;
   dispose: () => void;
 }
@@ -41,24 +39,6 @@ function placeMainStitches(mesh: THREE.InstancedMesh, radius: number): void {
   mesh.instanceMatrix.needsUpdate = true;
 }
 
-function placeQuarterStitches(mesh: THREE.InstancedMesh, radius: number): void {
-  const r = radius + 0.008;
-  for (let i = 0; i < QUARTER_PER_ARC; i++) {
-    const t = ((i + 0.5) / QUARTER_PER_ARC) * Math.PI;
-    // Upper hemisphere: the seam runs in the XY plane, over the top; stitches cross it along Z.
-    dummy.position.set(Math.cos(t) * r, Math.sin(t) * r, 0);
-    dummy.rotation.set(Math.PI / 2, 0, 0);
-    dummy.updateMatrix();
-    mesh.setMatrixAt(i * 2, dummy.matrix);
-    // Lower hemisphere: in the YZ plane, underneath; stitches cross it along X.
-    dummy.position.set(0, -Math.sin(t) * r, Math.cos(t) * r);
-    dummy.rotation.set(0, 0, Math.PI / 2);
-    dummy.updateMatrix();
-    mesh.setMatrixAt(i * 2 + 1, dummy.matrix);
-  }
-  mesh.instanceMatrix.needsUpdate = true;
-}
-
 export function createBallSeams(radius: number): BallSeams {
   const group = new THREE.Group();
   const ridgeMat = new THREE.MeshPhysicalMaterial({
@@ -67,7 +47,9 @@ export function createBallSeams(radius: number): BallSeams {
     clearcoat: 0.4
   });
   const threadMat = new THREE.MeshStandardMaterial({ color: 0xf1e6cf, roughness: 0.75 });
-  const lineMat = new THREE.MeshStandardMaterial({ color: 0x4a0d0a, roughness: 0.6 });
+  // Quarter seams on a real Test ball are stitched from the inside: all that shows is a faint
+  // line in the leather, so no thread and only a shade darker than the leather.
+  const lineMat = new THREE.MeshStandardMaterial({ color: 0x861b14, roughness: 0.55 });
 
   const ridgeGeo = new THREE.TorusGeometry(radius - 0.01, 0.1, 10, 160);
   ridgeGeo.rotateX(Math.PI / 2);
@@ -78,19 +60,14 @@ export function createBallSeams(radius: number): BallSeams {
   placeMainStitches(main, radius);
   main.count = 0;
 
-  const upperGeo = new THREE.TorusGeometry(radius + 0.002, 0.022, 6, 80, Math.PI);
+  const upperGeo = new THREE.TorusGeometry(radius - 0.003, 0.012, 5, 96, Math.PI);
   const lowerGeo = upperGeo.clone();
   lowerGeo.rotateX(Math.PI);
   lowerGeo.rotateY(Math.PI / 2);
   const upperLine = new THREE.Mesh(upperGeo, lineMat);
   const lowerLine = new THREE.Mesh(lowerGeo, lineMat);
 
-  const fineGeo = new THREE.CapsuleGeometry(0.012, 0.05, 2, 4);
-  const quarter = new THREE.InstancedMesh(fineGeo, threadMat, QUARTER_COUNT);
-  placeQuarterStitches(quarter, radius);
-  quarter.count = 0;
-
-  group.add(ridge, main, upperLine, lowerLine, quarter);
+  group.add(ridge, main, upperLine, lowerLine);
 
   const setSeam = (p: number): void => {
     const c = Math.max(0, Math.min(1, p));
@@ -99,9 +76,7 @@ export function createBallSeams(radius: number): BallSeams {
     const rise = Math.min(1, c / 0.12);
     ridge.scale.set(1, 0.3 + 0.7 * rise, 1);
     main.count = Math.floor(Math.min(1, c / 0.75) * MAIN_COUNT);
-    const q = Math.max(0, (c - 0.75) / 0.25);
-    upperLine.visible = lowerLine.visible = c > 0.7;
-    quarter.count = Math.floor(q * QUARTER_COUNT);
+    upperLine.visible = lowerLine.visible = c > 0.75;
   };
   setSeam(0);
 
@@ -109,10 +84,9 @@ export function createBallSeams(radius: number): BallSeams {
     group,
     setSeam,
     dispose: () => {
-      for (const g of [ridgeGeo, stitchGeo, upperGeo, lowerGeo, fineGeo]) g.dispose();
+      for (const g of [ridgeGeo, stitchGeo, upperGeo, lowerGeo]) g.dispose();
       for (const m of [ridgeMat, threadMat, lineMat]) m.dispose();
       main.dispose();
-      quarter.dispose();
     }
   };
 }

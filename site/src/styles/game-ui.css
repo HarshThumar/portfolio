@@ -135,11 +135,21 @@ button {
   background: var(--ink);
 }
 
-.loader-roller {
+/* A red Test ball rolls along the crease as the ground loads, turning as it goes. */
+.loader-ball {
   position: absolute;
   bottom: 2px;
-  left: calc(var(--progress) * (100% - 40px));
-  transition: left 0.4s ease-out;
+  left: calc(var(--progress) * (100% - 24px));
+  transform: rotate(calc(var(--progress) * 900deg));
+  transition:
+    left 0.4s ease-out,
+    transform 0.4s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader-ball {
+    transform: none;
+  }
 }
 
 /* The opening (game/src/opening): the line and play button under the giant ball. */
@@ -201,4 +211,13 @@ body.opening .hud {
 
 .opening-link {
   color: var(--leather);
+}
+
+/* The stamped ball can be grabbed and spun. */
+body.opening-grab canvas {
+  cursor: grab;
+}
+
+body.opening-grabbing canvas {
+  cursor: grabbing;
 }

@@ -49,19 +49,29 @@ const tour = { grounds, start, built: BUILT_GROUNDS, base, opening };
       aria-valuenow="0"
     >
       <div class="loader-crease">
-        <svg class="loader-roller" viewBox="0 0 40 24" width="40" height="24" aria-hidden="true">
-          <rect
-            x="6"
-            y="2"
-            width="22"
-            height="9"
-            rx="2"
-            fill="var(--willow)"
+        <svg class="loader-ball" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+          <circle
+            cx="12"
+            cy="12"
+            r="10.5"
+            fill="var(--leather)"
             stroke="var(--ink)"
             stroke-width="1.5"
-          ></rect>
-          <circle cx="9" cy="16" r="6" fill="var(--ink)"></circle>
-          <circle cx="29" cy="16" r="6" fill="var(--ink)"></circle>
+          ></circle>
+          <path
+            d="M7.6 2.6 Q12 12 7.6 21.4"
+            fill="none"
+            stroke="var(--cream)"
+            stroke-width="1"
+            stroke-dasharray="1.4 1"
+          ></path>
+          <path
+            d="M10.4 1.8 Q14.8 12 10.4 22.2"
+            fill="none"
+            stroke="var(--cream)"
+            stroke-width="1"
+            stroke-dasharray="1.4 1"
+          ></path>
         </svg>
       </div>
     </div>

@@ -1,10 +1,11 @@
 import * as THREE from 'three/webgpu';
 
-// Test-match weather for the opening: a flat grey overcast sky, close grey fog that hides the
+// Test-match weather for the opening: a flat overcast sky, warmed to the site's cream paper
+// so the loader fades straight into it, close fog that hides the
 // stadium far below, and soft shadowless light. The hub's own sky, fog and lights are put
 // back as the ball falls through the cloud deck (setClear), or at once on dispose.
 
-const OVERCAST_FOG = new THREE.Color(0xb9c0c7);
+const OVERCAST_FOG = new THREE.Color(0xd6cfbf);
 const FOG_NEAR = 60;
 const FOG_FAR = 290;
 const HEMI = 2.1;
@@ -25,10 +26,10 @@ function drawOvercast(): THREE.CanvasTexture {
   const ctx = canvas.getContext('2d');
   if (ctx) {
     const g = ctx.createLinearGradient(0, 0, 0, 256);
-    g.addColorStop(0, '#d9dcdf');
-    g.addColorStop(0.45, '#c6ccd2');
-    g.addColorStop(0.62, '#b9c0c7');
-    g.addColorStop(1, '#9ea6ae');
+    g.addColorStop(0, '#f1ead9');
+    g.addColorStop(0.45, '#e3dccb');
+    g.addColorStop(0.62, '#d6cfbf');
+    g.addColorStop(1, '#b9b2a3');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, 4, 256);
   }
@@ -61,8 +62,8 @@ export function createOpeningSky(scene: THREE.Scene): OpeningSky {
     if (isHubLight(o)) hubLights.push({ light: o, intensity: o.intensity });
   });
 
-  const hemi = new THREE.HemisphereLight(0xf2f3f2, 0x8d939b, HEMI);
-  const key = new THREE.DirectionalLight(0xfaf7f0, KEY);
+  const hemi = new THREE.HemisphereLight(0xfbf5e8, 0x9b9385, HEMI);
+  const key = new THREE.DirectionalLight(0xfff6e6, KEY);
   scene.add(hemi, key, key.target);
 
   let clear = 0;
