@@ -1,13 +1,16 @@
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import type { GameState } from '../types';
 
 export interface TouchControls {
   destroy: () => void;
 }
 
+const JOYSTICK_RADIUS = 35;
+
 function createJoystickElements(): { container: HTMLElement; knob: HTMLElement } {
   const container = document.createElement('div');
   container.id = 'touch-joystick';
+  // Circles are deliberate here: a joystick base and knob are round by function, not decoration.
   Object.assign(container.style, {
     position: 'fixed',
     bottom: '24px',
@@ -15,8 +18,8 @@ function createJoystickElements(): { container: HTMLElement; knob: HTMLElement }
     width: '90px',
     height: '90px',
     borderRadius: '50%',
-    border: '2px solid var(--ink, #1e1b16)',
-    backgroundColor: 'var(--cream, #f3ead3)',
+    border: '2px solid var(--ink)',
+    backgroundColor: 'var(--cream)',
     opacity: '0.85',
     touchAction: 'none',
     zIndex: '500'
@@ -30,7 +33,7 @@ function createJoystickElements(): { container: HTMLElement; knob: HTMLElement }
     width: '40px',
     height: '40px',
     borderRadius: '50%',
-    backgroundColor: 'var(--ink, #1e1b16)',
+    backgroundColor: 'var(--ink)',
     pointerEvents: 'none'
   });
   container.appendChild(knob);
@@ -38,99 +41,77 @@ function createJoystickElements(): { container: HTMLElement; knob: HTMLElement }
   return { container, knob };
 }
 
-function bindJoystickEvents(
-  container: HTMLElement,
-  knob: HTMLElement,
-  state: GameState
-): () => void {
-  let activeTouchId: number | null = null;
-  const maxRadius = 35;
+function createJoystick(state: GameState): () => void {
+  const { container, knob } = createJoystickElements();
+  let activeId: number | null = null;
 
-  const onTouchMove = (e: TouchEvent): void => {
-    for (let i = 0; i < e.changedTouches.length; i++) {
-      const touch = e.changedTouches[i];
-      if (touch && touch.identifier === activeTouchId) {
-        const rect = container.getBoundingClientRect();
-        let dx = touch.clientX - (rect.left + rect.width / 2);
-        let dy = touch.clientY - (rect.top + rect.height / 2);
-        const dist = Math.hypot(dx, dy);
-
-        if (dist > maxRadius) {
-          dx = (dx / dist) * maxRadius;
-          dy = (dy / dist) * maxRadius;
-        }
-
-        knob.style.transform = `translate(${dx}px, ${dy}px)`;
-        state.inputs.steer = dx / maxRadius;
-        state.inputs.forward = -dy / maxRadius;
-      }
-    }
+  const reset = (): void => {
+    activeId = null;
+    knob.style.transform = 'translate(0px, 0px)';
+    state.inputs.steer = 0;
+    state.inputs.forward = 0;
   };
 
-  const onTouchStart = (e: TouchEvent): void => {
-    if (activeTouchId === null && e.changedTouches[0]) {
-      activeTouchId = e.changedTouches[0].identifier;
+  const apply = (e: PointerEvent): void => {
+    const rect = container.getBoundingClientRect();
+    let dx = e.clientX - (rect.left + rect.width / 2);
+    let dy = e.clientY - (rect.top + rect.height / 2);
+    const dist = Math.hypot(dx, dy);
+    if (dist > JOYSTICK_RADIUS) {
+      dx = (dx / dist) * JOYSTICK_RADIUS;
+      dy = (dy / dist) * JOYSTICK_RADIUS;
     }
+    knob.style.transform = `translate(${dx}px, ${dy}px)`;
+    state.inputs.steer = dx / JOYSTICK_RADIUS;
+    state.inputs.forward = -dy / JOYSTICK_RADIUS;
   };
 
-  const onTouchEnd = (e: TouchEvent): void => {
-    for (let i = 0; i < e.changedTouches.length; i++) {
-      const touch = e.changedTouches[i];
-      if (touch && touch.identifier === activeTouchId) {
-        activeTouchId = null;
-        knob.style.transform = 'translate(0px, 0px)';
-        state.inputs.steer = 0;
-        state.inputs.forward = 0;
-      }
-    }
+  const onDown = (e: PointerEvent): void => {
+    if (activeId !== null) return;
+    activeId = e.pointerId;
+    container.setPointerCapture(e.pointerId);
+    apply(e);
+  };
+  const onMove = (e: PointerEvent): void => {
+    if (e.pointerId === activeId) apply(e);
+  };
+  const onEnd = (e: PointerEvent): void => {
+    if (e.pointerId === activeId) reset();
   };
 
-  container.addEventListener('touchstart', onTouchStart, { passive: true });
-  window.addEventListener('touchmove', onTouchMove, { passive: true });
-  window.addEventListener('touchend', onTouchEnd, { passive: true });
-  window.addEventListener('touchcancel', onTouchEnd, { passive: true });
+  container.addEventListener('pointerdown', onDown);
+  container.addEventListener('pointermove', onMove);
+  container.addEventListener('pointerup', onEnd);
+  container.addEventListener('pointercancel', onEnd);
+  container.addEventListener('lostpointercapture', onEnd);
 
   return () => {
-    container.removeEventListener('touchstart', onTouchStart);
-    window.removeEventListener('touchmove', onTouchMove);
-    window.removeEventListener('touchend', onTouchEnd);
-    window.removeEventListener('touchcancel', onTouchEnd);
+    container.removeEventListener('pointerdown', onDown);
+    container.removeEventListener('pointermove', onMove);
+    container.removeEventListener('pointerup', onEnd);
+    container.removeEventListener('pointercancel', onEnd);
+    container.removeEventListener('lostpointercapture', onEnd);
+    container.remove();
   };
 }
 
-function createJoystick(state: GameState): {
-  container: HTMLElement;
-  destroy: () => void;
-} {
-  const { container, knob } = createJoystickElements();
-  const unbind = bindJoystickEvents(container, knob, state);
-
-  return {
-    container,
-    destroy: () => {
-      unbind();
-      if (container.parentNode) container.parentNode.removeChild(container);
-    }
-  };
-}
-
-function createHonkButton(state: GameState): {
-  btn: HTMLElement;
-  destroy: () => void;
-} {
+function createHonkButton(state: GameState): () => void {
   const btn = document.createElement('button');
+  btn.type = 'button';
   btn.id = 'touch-honk';
-  btn.textContent = 'HORN';
+  btn.textContent = '[[COPY: horn button label]]';
   Object.assign(btn.style, {
     position: 'fixed',
     bottom: '24px',
     right: '24px',
-    width: '60px',
-    height: '60px',
-    borderRadius: '50%',
-    border: '2px solid var(--ink, #1e1b16)',
-    backgroundColor: 'var(--cream, #f3ead3)',
-    color: 'var(--ink, #1e1b16)',
+    minWidth: '72px',
+    minHeight: '48px',
+    padding: '8px 12px',
+    borderRadius: 'var(--radius)',
+    border: '2px solid var(--ink)',
+    backgroundColor: 'var(--cream)',
+    color: 'var(--ink)',
+    boxShadow: '2px 2px 0 var(--ink)',
     fontFamily: 'var(--font-display)',
     fontSize: '11px',
     zIndex: '500',
@@ -138,78 +119,66 @@ function createHonkButton(state: GameState): {
   });
   document.body.appendChild(btn);
 
-  const onStart = (): void => {
+  const onDown = (e: PointerEvent): void => {
+    btn.setPointerCapture(e.pointerId);
     state.inputs.horn = true;
   };
   const onEnd = (): void => {
     state.inputs.horn = false;
   };
 
-  btn.addEventListener('touchstart', onStart, { passive: true });
-  btn.addEventListener('touchend', onEnd, { passive: true });
-  btn.addEventListener('mousedown', onStart);
-  btn.addEventListener('mouseup', onEnd);
+  btn.addEventListener('pointerdown', onDown);
+  btn.addEventListener('pointerup', onEnd);
+  btn.addEventListener('pointercancel', onEnd);
+  btn.addEventListener('lostpointercapture', onEnd);
 
-  return {
-    btn,
-    destroy: () => {
-      btn.removeEventListener('touchstart', onStart);
-      btn.removeEventListener('touchend', onEnd);
-      btn.removeEventListener('mousedown', onStart);
-      btn.removeEventListener('mouseup', onEnd);
-      if (btn.parentNode) btn.parentNode.removeChild(btn);
-    }
+  return () => {
+    btn.removeEventListener('pointerdown', onDown);
+    btn.removeEventListener('pointerup', onEnd);
+    btn.removeEventListener('pointercancel', onEnd);
+    btn.removeEventListener('lostpointercapture', onEnd);
+    btn.remove();
   };
 }
 
+/** Listens on the canvas only, so HUD buttons, dialogs and links never set a target. */
 function setupClickToDrive(state: GameState): () => void {
+  const canvas = state.canvas;
   const raycaster = new THREE.Raycaster();
   const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   const intersectPoint = new THREE.Vector3();
+  const ndc = new THREE.Vector2();
 
   const onPointerDown = (e: PointerEvent): void => {
-    const target = e.target as HTMLElement;
-    if (
-      target.id === 'touch-joystick' ||
-      target.id === 'touch-honk' ||
-      target.closest('#perf-debug-panel')
-    ) {
-      return;
-    }
-
-    const mouse = new THREE.Vector2(
-      (e.clientX / window.innerWidth) * 2 - 1,
-      -(e.clientY / window.innerHeight) * 2 + 1
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    ndc.set(
+      ((e.clientX - rect.left) / rect.width) * 2 - 1,
+      -((e.clientY - rect.top) / rect.height) * 2 + 1
     );
-
-    raycaster.setFromCamera(mouse, state.camera);
-    if (raycaster.ray.intersectPlane(groundPlane, intersectPoint)) {
-      if (state.vehicle) {
-        state.vehicle.driveTarget = { x: intersectPoint.x, z: intersectPoint.z };
-      }
+    raycaster.setFromCamera(ndc, state.camera);
+    if (raycaster.ray.intersectPlane(groundPlane, intersectPoint) && state.vehicle) {
+      state.vehicle.driveTarget = { x: intersectPoint.x, z: intersectPoint.z };
     }
   };
 
-  window.addEventListener('pointerdown', onPointerDown);
-  return () => window.removeEventListener('pointerdown', onPointerDown);
+  canvas.addEventListener('pointerdown', onPointerDown);
+  return () => canvas.removeEventListener('pointerdown', onPointerDown);
 }
 
 export function setupTouchAndClickControls(state: GameState): TouchControls {
-  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  const disposables: Array<() => void> = [];
+  const disposables: Array<() => void> = [setupClickToDrive(state)];
 
-  if (isTouchDevice) {
-    const { destroy: destroyJoy } = createJoystick(state);
-    const { destroy: destroyHonk } = createHonkButton(state);
-    disposables.push(destroyJoy, destroyHonk);
+  if (window.matchMedia('(pointer: coarse)').matches) {
+    disposables.push(createJoystick(state), createHonkButton(state));
   }
-
-  const cleanupClick = setupClickToDrive(state);
-  disposables.push(cleanupClick);
 
   return {
     destroy: () => {
       for (const fn of disposables) fn();
+      state.inputs.forward = 0;
+      state.inputs.steer = 0;
+      state.inputs.horn = false;
     }
   };
 }

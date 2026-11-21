@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import type RAPIER from '@dimforge/rapier3d-compat';
 import type { SharedMaterials } from '../world/palette';
 import type { GameState } from '../types';
@@ -9,83 +9,152 @@ export interface StumpsInstance {
   dispose: () => void;
 }
 
-interface StumpPart {
-  mesh: THREE.Mesh;
+interface Part {
   body: RAPIER.RigidBody;
+  index: number;
+  isStump: boolean;
+  wicket: number;
   initialPos: THREE.Vector3;
-  initialRot: THREE.Quaternion;
 }
 
-function createWicket(
-  group: THREE.Group,
+const WICKET_Z = [-8.8, 8.8];
+const STUMP_X = [-0.11, 0, 0.11];
+const BAIL_X = [-0.055, 0.055];
+const STUMP_HALF_HEIGHT = 0.36;
+// A hair above the stump tops so the bails seat without interpenetrating.
+const BAIL_Y = STUMP_HALF_HEIGHT * 2 + 0.02 + 0.003;
+const RESET_DELAY = 8;
+const RESET_CLEARANCE = 2;
+// A free-standing 72 cm cylinder on a 4 cm radius falls over by itself, as real stumps would
+// if they weren't pushed into the ground. So wickets are fixed bodies until the roller comes
+// within this distance while moving, then they turn dynamic and the collision knocks them.
+const RELEASE_DISTANCE = 1.8;
+const RELEASE_SPEED = 0.5;
+
+function createParts(
   world: RAPIER.World,
-  rapier: typeof RAPIER,
-  materials: SharedMaterials,
-  zPos: number
-): { parts: StumpPart[]; dispose: () => void } {
-  const parts: StumpPart[] = [];
-  const disposables: Array<() => void> = [];
+  rapier: typeof RAPIER
+): { stumps: Part[]; bails: Part[] } {
+  const stumps: Part[] = [];
+  const bails: Part[] = [];
 
-  const stumpGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.72, 8);
-  disposables.push(() => stumpGeo.dispose());
+  WICKET_Z.forEach((z, wicket) => {
+    for (const x of STUMP_X) {
+      const body = world.createRigidBody(
+        rapier.RigidBodyDesc.fixed()
+          .setTranslation(x, STUMP_HALF_HEIGHT, z)
+          .setLinearDamping(0.8)
+          .setAngularDamping(0.8)
+      );
+      const collider = rapier.ColliderDesc.cylinder(STUMP_HALF_HEIGHT, 0.04)
+        .setDensity(400)
+        .setRestitution(0.4);
+      world.createCollider(collider, body);
+      stumps.push({
+        body,
+        index: stumps.length,
+        isStump: true,
+        wicket,
+        initialPos: new THREE.Vector3(x, STUMP_HALF_HEIGHT, z)
+      });
+    }
+    for (const x of BAIL_X) {
+      const body = world.createRigidBody(
+        rapier.RigidBodyDesc.fixed().setTranslation(x, BAIL_Y, z).setLinearDamping(0.5)
+      );
+      world.createCollider(rapier.ColliderDesc.cuboid(0.055, 0.02, 0.02).setDensity(200), body);
+      bails.push({
+        body,
+        index: bails.length,
+        isStump: false,
+        wicket,
+        initialPos: new THREE.Vector3(x, BAIL_Y, z)
+      });
+    }
+  });
+  return { stumps, bails };
+}
 
-  // 3 Stumps: Off, Middle, Leg
-  const xOffsets = [-0.11, 0, 0.11];
-  for (const x of xOffsets) {
-    const mesh = new THREE.Mesh(stumpGeo, materials.willow);
-    mesh.position.set(x, 0.36, zPos);
-    mesh.castShadow = true;
-    group.add(mesh);
+interface Rendering {
+  stumpMesh: THREE.InstancedMesh;
+  bailMesh: THREE.InstancedMesh;
+  writePart: (part: Part, mesh: THREE.InstancedMesh) => void;
+  dispose: () => void;
+}
 
-    const bodyDesc = rapier.RigidBodyDesc.dynamic()
-      .setTranslation(x, 0.36, zPos)
-      .setLinearDamping(0.8)
-      .setAngularDamping(0.8);
-    const body = world.createRigidBody(bodyDesc);
-    const collider = rapier.ColliderDesc.cylinder(0.36, 0.04).setDensity(400).setRestitution(0.4);
-    world.createCollider(collider, body);
-
-    parts.push({
-      mesh,
-      body,
-      initialPos: new THREE.Vector3(x, 0.36, zPos),
-      initialRot: mesh.quaternion.clone()
-    });
-  }
-
-  // 2 Bails on top
+function createRendering(materials: SharedMaterials, stumps: Part[], bails: Part[]): Rendering {
+  const stumpGeo = new THREE.CylinderGeometry(0.04, 0.04, STUMP_HALF_HEIGHT * 2, 8);
   const bailGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.11, 6);
   bailGeo.rotateZ(Math.PI / 2);
-  disposables.push(() => bailGeo.dispose());
+  // Instancing keeps ten moving parts down to two draw calls.
+  const stumpMesh = new THREE.InstancedMesh(stumpGeo, materials.willow, stumps.length);
+  const bailMesh = new THREE.InstancedMesh(bailGeo, materials.willow, bails.length);
+  stumpMesh.frustumCulled = false;
+  bailMesh.frustumCulled = false;
 
-  const bailX = [-0.055, 0.055];
-  for (const bx of bailX) {
-    const mesh = new THREE.Mesh(bailGeo, materials.willow);
-    mesh.position.set(bx, 0.73, zPos);
-    group.add(mesh);
+  const pos = new THREE.Vector3();
+  const quat = new THREE.Quaternion();
+  const unit = new THREE.Vector3(1, 1, 1);
+  const matrix = new THREE.Matrix4();
 
-    const bodyDesc = rapier.RigidBodyDesc.dynamic()
-      .setTranslation(bx, 0.73, zPos)
-      .setLinearDamping(0.5);
-    const body = world.createRigidBody(bodyDesc);
-    const collider = rapier.ColliderDesc.cuboid(0.055, 0.02, 0.02).setDensity(200);
-    world.createCollider(collider, body);
+  function writePart(part: Part, mesh: THREE.InstancedMesh): void {
+    const t = part.body.translation();
+    const r = part.body.rotation();
+    matrix.compose(pos.set(t.x, t.y, t.z), quat.set(r.x, r.y, r.z, r.w), unit);
+    mesh.setMatrixAt(part.index, matrix);
+  }
 
-    parts.push({
-      mesh,
-      body,
-      initialPos: new THREE.Vector3(bx, 0.73, zPos),
-      initialRot: mesh.quaternion.clone()
+  for (const part of stumps) writePart(part, stumpMesh);
+  for (const part of bails) writePart(part, bailMesh);
+
+  return {
+    stumpMesh,
+    bailMesh,
+    writePart,
+    dispose: () => {
+      stumpMesh.dispose();
+      bailMesh.dispose();
+      stumpGeo.dispose();
+      bailGeo.dispose();
+    }
+  };
+}
+
+function createWicketControl(
+  allParts: Part[],
+  rapier: typeof RAPIER,
+  rendering: Rendering
+): { release: (state: GameState) => void; reset: () => void } {
+  const { stumpMesh, bailMesh, writePart } = rendering;
+  const released = WICKET_Z.map(() => false);
+
+  function release(state: GameState): void {
+    const v = state.vehicle;
+    if (!v || Math.abs(v.speed) < RELEASE_SPEED) return;
+    WICKET_Z.forEach((z, wicket) => {
+      if (released[wicket]) return;
+      if (Math.hypot(v.currentPosition.x, v.currentPosition.z - z) > RELEASE_DISTANCE) return;
+      released[wicket] = true;
+      for (const part of allParts) {
+        if (part.wicket === wicket) part.body.setBodyType(rapier.RigidBodyType.Dynamic, true);
+      }
     });
   }
 
-  return {
-    parts,
-    dispose: () => {
-      for (const p of parts) world.removeRigidBody(p.body);
-      for (const fn of disposables) fn();
+  function reset(): void {
+    released.fill(false);
+    for (const part of allParts) {
+      part.body.setBodyType(rapier.RigidBodyType.Fixed, false);
+      part.body.setTranslation(part.initialPos, true);
+      part.body.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true);
+      part.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      part.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      writePart(part, part.isStump ? stumpMesh : bailMesh);
     }
-  };
+    stumpMesh.instanceMatrix.needsUpdate = true;
+    bailMesh.instanceMatrix.needsUpdate = true;
+  }
+  return { release, reset };
 }
 
 export function createStumps(
@@ -97,43 +166,60 @@ export function createStumps(
 ): StumpsInstance {
   const group = new THREE.Group();
   group.name = 'cricket-stumps';
-  scene.add(group);
 
-  const north = createWicket(group, world, rapier, materials, -8.8);
-  const south = createWicket(group, world, rapier, materials, 8.8);
-  const allParts = [...north.parts, ...south.parts];
+  const { stumps, bails } = createParts(world, rapier);
+  const allParts = [...stumps, ...bails];
+  const rendering = createRendering(materials, stumps, bails);
+  const { stumpMesh, bailMesh, writePart } = rendering;
+  group.add(stumpMesh, bailMesh);
+  scene.add(group);
 
   let hasAppealed = false;
   let resetTimer = 0;
 
+  function rollerNearWicket(state: GameState): boolean {
+    const v = state.vehicle?.currentPosition;
+    if (!v) return false;
+    return WICKET_Z.some((z) => Math.hypot(v.x, v.z - z) < RESET_CLEARANCE);
+  }
+
+  const wickets = createWicketControl(allParts, rapier, rendering);
+  const releaseNearbyWicket = wickets.release;
+  const resetWickets = (): void => {
+    hasAppealed = false;
+    wickets.reset();
+  };
+
   function update(state: GameState): void {
-    const dt = state.time.dt;
+    releaseNearbyWicket(state);
+    let stumpsDirty = false;
+    let bailsDirty = false;
 
     for (const part of allParts) {
-      const pos = part.body.translation();
-      const rot = part.body.rotation();
-      part.mesh.position.set(pos.x, pos.y, pos.z);
-      part.mesh.quaternion.set(rot.x, rot.y, rot.z, rot.w);
+      if (part.body.isSleeping() || part.body.isFixed()) continue;
+      if (part.isStump) {
+        writePart(part, stumpMesh);
+        stumpsDirty = true;
+      } else {
+        writePart(part, bailMesh);
+        bailsDirty = true;
+      }
 
-      // Check if knocked over (fallen below y = 0.3 or tilted significantly)
-      if (!hasAppealed && (pos.y < 0.25 || Math.abs(rot.x) > 0.4 || Math.abs(rot.z) > 0.4)) {
+      const t = part.body.translation();
+      const r = part.body.rotation();
+      const toppled = t.y < 0.25 || Math.abs(r.x) > 0.4 || Math.abs(r.z) > 0.4;
+      if (!hasAppealed && toppled) {
         hasAppealed = true;
-        resetTimer = 8.0;
+        resetTimer = RESET_DELAY;
         if (onHowzat) onHowzat();
       }
     }
+    if (stumpsDirty) stumpMesh.instanceMatrix.needsUpdate = true;
+    if (bailsDirty) bailMesh.instanceMatrix.needsUpdate = true;
 
     if (hasAppealed) {
-      resetTimer -= dt;
-      if (resetTimer <= 0) {
-        hasAppealed = false;
-        for (const part of allParts) {
-          part.body.setTranslation(part.initialPos, true);
-          part.body.setRotation(part.initialRot, true);
-          part.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
-          part.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
-        }
-      }
+      resetTimer -= state.time.dt;
+      if (resetTimer <= 0 && !rollerNearWicket(state)) resetWickets();
     }
   }
 
@@ -142,8 +228,8 @@ export function createStumps(
     update,
     dispose: () => {
       scene.remove(group);
-      north.dispose();
-      south.dispose();
+      for (const part of allParts) world.removeRigidBody(part.body);
+      rendering.dispose();
     }
   };
 }

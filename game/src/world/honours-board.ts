@@ -1,4 +1,5 @@
-import type { GameState } from '../types';
+import type { GameState, GroundData } from '../types';
+import { attachDialog } from '../ui/dialog';
 
 export interface HonoursBoardController {
   open: () => void;
@@ -8,72 +9,54 @@ export interface HonoursBoardController {
   destroy: () => void;
 }
 
-interface HonoursItem {
-  name: string;
-  advisory: boolean;
-  story?: string;
+type Styles = Partial<CSSStyleDeclaration>;
+
+const TRIGGER_RADIUS = 7;
+// Wider than the trigger so a roller idling at the edge cannot re-open the board.
+const RESET_RADIUS = 12;
+
+function el<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  styles: Styles,
+  text?: string
+): HTMLElementTagNameMap[K] {
+  const node = document.createElement(tag);
+  Object.assign(node.style, styles);
+  if (text !== undefined) node.textContent = text;
+  return node;
 }
 
-const HONOURS_MODELS: HonoursItem[] = [
-  { name: 'OAuth 2.1 + PKCE Authorization Flow', advisory: false },
-  { name: 'ID-JAG Token Exchange Delegation Flow', advisory: false },
-  { name: 'Dynamic Client Registration Model', advisory: false },
-  { name: 'Confused Deputy Resistance Model', advisory: false },
-  { name: 'Agent-Payment Mandate Verification (UPI-style)', advisory: false },
-  { name: 'Scope Step-Up Protocol Model', advisory: false },
-  {
-    name: 'Rediscovered Advisory: Auth Code Replay',
-    advisory: true,
-    story:
-      'Weakened client check allows auth code replay across servers; fixed model proves trace impossible.'
-  },
-  {
-    name: 'Rediscovered Advisory: Missing Audience Binding',
-    advisory: true,
-    story:
-      'Missing audience binding allows token passthrough to malicious server; fixed model enforces proof of possession.'
-  },
-  {
-    name: 'Rediscovered Advisory: Unchecked Resource Indicator',
-    advisory: true,
-    story:
-      'Unchecked resource indicator enables token substitution; verified model enforces dynamic binding.'
+/** The counts live in ground.numbers so the board never hard-codes them. */
+function countFor(ground: GroundData, value: string): number {
+  const found = ground.numbers.find((n) => n.value === value);
+  return found ? Number(found.value) : 0;
+}
+
+function buildSection(heading: string, rows: string[], color: string): HTMLElement {
+  const section = el('section', { marginBottom: '16px' });
+  section.appendChild(
+    el(
+      'h3',
+      { margin: '0 0 6px 0', fontSize: '12px', letterSpacing: '1px', color: 'var(--cream)' },
+      heading
+    )
+  );
+  const list = el('ol', { margin: '0', paddingLeft: '22px' });
+  for (const text of rows) {
+    list.appendChild(
+      el(
+        'li',
+        { padding: '6px 0', borderBottom: '1px solid var(--ink)', fontSize: '13px', color },
+        text
+      )
+    );
   }
-];
-
-function renderModelRows(): string {
-  return HONOURS_MODELS.map((item, idx) => {
-    const textColor = item.advisory ? 'var(--leather)' : 'var(--willow)';
-    const tag = item.advisory ? 'REDISCOVERED ADVISORY' : 'VERIFIED';
-    const cursor = item.advisory ? 'cursor: pointer;' : '';
-    const clickHint = item.advisory ? 'title="Click to view formal verification finding"' : '';
-    const storyHtml = item.story
-      ? `<div class="honours-story" style="display: none; font-size: 11px; font-style: italic; color: var(--cream); margin-top: 4px; padding-left: 12px; border-left: 2px solid var(--leather);">${item.story}</div>`
-      : '';
-
-    return `
-      <div class="honours-row" data-idx="${idx}" style="padding: 6px 0; border-bottom: 1px solid rgba(243, 234, 211, 0.15); ${cursor}" ${clickHint}>
-        <div style="display: flex; justify-content: space-between; align-items: baseline;">
-          <span style="font-size: 13px; font-weight: 600; color: ${textColor};">
-            ${idx + 1}. ${item.name}
-          </span>
-          <span style="font-size: 10px; letter-spacing: 1px; color: ${textColor}; margin-left: 8px; white-space: nowrap;">
-            ${tag}
-          </span>
-        </div>
-        ${storyHtml}
-      </div>
-    `;
-  }).join('');
+  section.appendChild(list);
+  return section;
 }
 
-function createBoardElement(): HTMLElement {
-  const modal = document.createElement('div');
-  modal.id = 'long-room-honours-board';
-  modal.setAttribute('role', 'dialog');
-  modal.setAttribute('aria-label', "Lord's Long Room Honours Board");
-
-  Object.assign(modal.style, {
+function buildBoard(ground: GroundData) {
+  const modal = el('div', {
     position: 'fixed',
     top: '50%',
     left: '50%',
@@ -88,94 +71,99 @@ function createBoardElement(): HTMLElement {
     padding: '24px',
     boxShadow: '6px 6px 0 var(--ink)',
     zIndex: '2500',
-    display: 'none',
     fontFamily: 'var(--font-body)'
   });
+  modal.id = 'long-room-honours-board';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'honours-board-title');
 
-  modal.innerHTML = `
-    <div style="text-align: center; border-bottom: 2px solid var(--willow); padding-bottom: 12px; margin-bottom: 16px;">
-      <div style="font-family: var(--font-display); font-size: 18px; color: var(--willow); letter-spacing: 1px;">
-        LORD'S · THE LONG ROOM
-      </div>
-      <div style="font-size: 12px; margin-top: 4px; color: var(--cream); letter-spacing: 0.5px;">
-        HONOURS BOARD · 9 PROTOCOL MODELS
-      </div>
-    </div>
-    <div id="honours-rows-container" style="margin-bottom: 16px;">
-      ${renderModelRows()}
-    </div>
-    <div style="text-align: center; margin-top: 18px;">
-      <button id="close-honours-btn" style="background: var(--cream); color: var(--ink); border: 2px solid var(--ink); border-radius: var(--radius); padding: 8px 18px; font-family: var(--font-display); font-size: 12px; cursor: pointer;">
-        CLOSE
-      </button>
-    </div>
-  `;
-
-  document.body.appendChild(modal);
-  return modal;
-}
-
-function attachAdvisoryClicks(modal: HTMLElement): void {
-  const rows = modal.querySelectorAll<HTMLElement>('.honours-row');
-  rows.forEach((row) => {
-    const story = row.querySelector<HTMLElement>('.honours-story');
-    if (story) {
-      row.addEventListener('click', () => {
-        const isHidden = story.style.display === 'none';
-        story.style.display = isHidden ? 'block' : 'none';
-      });
-    }
+  const head = el('div', {
+    textAlign: 'center',
+    borderBottom: '2px solid var(--willow)',
+    paddingBottom: '12px',
+    marginBottom: '16px'
   });
+  const title = el(
+    'h2',
+    { margin: '0', fontFamily: 'var(--font-display)', fontSize: '18px', color: 'var(--willow)' },
+    '[[COPY: honours board title]]'
+  );
+  title.id = 'honours-board-title';
+  head.append(
+    title,
+    el('div', { fontSize: '12px', marginTop: '4px' }, '[[COPY: honours board subtitle]]')
+  );
+
+  const models = Array.from(
+    { length: countFor(ground, '9') },
+    (_, i) => `[[NEEDS FACT: protocol model ${i + 1} name]]`
+  );
+  const advisories = Array.from(
+    { length: countFor(ground, '3') },
+    (_, i) => `[[NEEDS FACT: rediscovered advisory ${i + 1}, ID and one line]]`
+  );
+
+  const closeBtn = el(
+    'button',
+    {
+      background: 'var(--cream)',
+      color: 'var(--ink)',
+      border: '2px solid var(--ink)',
+      borderRadius: 'var(--radius)',
+      padding: '8px 18px',
+      fontFamily: 'var(--font-display)',
+      fontSize: '12px',
+      cursor: 'pointer'
+    },
+    '[[COPY: close button label]]'
+  );
+  closeBtn.type = 'button';
+  const footer = el('div', { textAlign: 'center', marginTop: '18px' });
+  footer.appendChild(closeBtn);
+
+  modal.append(
+    head,
+    buildSection('[[COPY: models section heading]]', models, 'var(--willow)'),
+    buildSection('[[COPY: advisories section heading]]', advisories, 'var(--cream)'),
+    footer
+  );
+  return { modal, closeBtn };
 }
 
-export function createHonoursBoard(triggerPosition = { x: 0, z: -46 }): HonoursBoardController {
-  const modal = createBoardElement();
-  const closeBtn = modal.querySelector('#close-honours-btn');
-  attachAdvisoryClicks(modal);
+export function createHonoursBoard(
+  ground: GroundData,
+  triggerPosition: { x: number; z: number }
+): HonoursBoardController {
+  const { modal, closeBtn } = buildBoard(ground);
+  document.body.appendChild(modal);
+  const dialog = attachDialog(modal, closeBtn);
+  closeBtn.addEventListener('click', dialog.close);
 
-  let visible = false;
-  let hasTriggeredProximity = false;
-
-  function open(): void {
-    visible = true;
-    modal.style.display = 'block';
-  }
-
-  function close(): void {
-    visible = false;
-    modal.style.display = 'none';
-  }
-
-  closeBtn?.addEventListener('click', close);
-
-  const onKeyDown = (e: KeyboardEvent): void => {
-    if (e.key === 'Escape' && visible) close();
-  };
-  window.addEventListener('keydown', onKeyDown);
+  // Armed means the roller has been away; it disarms on open so focus is taken once per approach.
+  let armed = true;
 
   function update(state: GameState): void {
     const vehicle = state.vehicle;
     if (!vehicle) return;
-
-    const vPos = vehicle.currentPosition;
-    const dist = Math.hypot(vPos.x - triggerPosition.x, vPos.z - triggerPosition.z);
-
-    if (dist < 7.0 && !hasTriggeredProximity && !visible) {
-      hasTriggeredProximity = true;
-      open();
-    } else if (dist > 12.0) {
-      hasTriggeredProximity = false;
+    const pos = vehicle.currentPosition;
+    const dist = Math.hypot(pos.x - triggerPosition.x, pos.z - triggerPosition.z);
+    if (dist < TRIGGER_RADIUS && armed) {
+      armed = false;
+      dialog.open();
+    } else if (dist > RESET_RADIUS) {
+      armed = true;
     }
   }
 
   return {
-    open,
-    close,
-    isOpen: () => visible,
+    open: dialog.open,
+    close: dialog.close,
+    isOpen: dialog.isOpen,
     update,
     destroy: () => {
-      window.removeEventListener('keydown', onKeyDown);
-      if (modal.parentNode) modal.parentNode.removeChild(modal);
+      dialog.destroy();
+      modal.remove();
     }
   };
 }

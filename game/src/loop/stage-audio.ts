@@ -9,7 +9,7 @@ export function createStageAudio(soundManager: SoundManager): Stage {
     name: 'audio',
     order: 70,
     update: (state: GameState) => {
-      const speed = state.vehicle?.speed ?? 0;
+      const speed = Math.abs(state.vehicle?.speed ?? 0);
       soundManager.updateRollerSpeed(speed);
 
       if (state.inputs.brake && !wasBraking && speed > 2.0) {

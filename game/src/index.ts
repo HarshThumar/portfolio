@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import type { WebGPURenderer } from 'three/webgpu';
 import RAPIER from '@dimforge/rapier3d-compat';
 import { TypedEmitter } from './events/emitter';
@@ -6,11 +6,12 @@ import { createDebugPanel } from './debug/debug-panel';
 import { createPhysicsWorld, createRenderer } from './loop/engine-setup';
 import { createStageInputs } from './loop/stage-inputs';
 import { createStageInteractions } from './loop/stage-interactions';
-import { createSharedMaterials } from './world/palette';
+import { createSharedMaterials, PALETTE } from './world/palette';
 import { createGroundBase } from './world/ground-base';
 import { createLordsPavilion } from './world/lords-pavilion';
 import { createHonoursBoard, type HonoursBoardController } from './world/honours-board';
 import { createScoreboard } from './world/scoreboard';
+import { createBlobShadow } from './world/blob-shadow';
 import { createCrowd } from './world/crowd';
 import { createSkySystem } from './world/sky';
 import { createInitialState, startMainLoop, type GameLoop } from './loop/game-state';
@@ -22,7 +23,14 @@ import { createInfoPost } from './interactions/info-post';
 import { createSoundManager, type SoundManager } from './audio/audio';
 import { createStampBanner, type StampBanner } from './ui/stamp-banner';
 import { createProjectPanel, type ProjectPanelController } from './ui/project-panel';
-import type { GameEvents, GameInstance, GameOptions, GameState, VehicleState } from './types';
+import type {
+  GameEvents,
+  GameInstance,
+  GameOptions,
+  GameState,
+  GroundData,
+  VehicleState
+} from './types';
 
 export type { GameEvents, GameInstance, GameOptions, GameState, VehicleState };
 
@@ -30,13 +38,13 @@ function setupLighting(scene: THREE.Scene): {
   sun: THREE.DirectionalLight;
   ambient: THREE.AmbientLight;
 } {
-  scene.background = new THREE.Color(0xf3ead3); // --cream
-  const ambient = new THREE.AmbientLight(0xfff6da, 1.4);
+  // Intensities are owned by the sky system (day/night); these are just the lights.
+  scene.background = new THREE.Color(PALETTE.cream);
+  const ambient = new THREE.AmbientLight(PALETTE.flood);
   scene.add(ambient);
 
-  const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+  const sun = new THREE.DirectionalLight(PALETTE.flood);
   sun.position.set(15, 30, 20);
-  sun.castShadow = true;
   scene.add(sun);
   return { sun, ambient };
 }
@@ -47,7 +55,8 @@ function setupInteractions(
   materials: ReturnType<typeof createSharedMaterials>,
   stageInteractions: ReturnType<typeof createStageInteractions>,
   soundManager: SoundManager,
-  stampBanner: StampBanner
+  stampBanner: StampBanner,
+  ground: GroundData
 ): {
   honoursBoard: HonoursBoardController;
   projectPanel: ProjectPanelController;
@@ -64,15 +73,14 @@ function setupInteractions(
     stampBanner.show('SIX!');
   });
 
-  const projectPanel = createProjectPanel();
+  const projectPanel = createProjectPanel(ground);
 
-  const infoPost = createInfoPost(scene, world, RAPIER, materials, { x: 22, y: 0, z: 0 }, () => {
+  const infoPost = createInfoPost(scene, world, RAPIER, materials, INFO_POST, () => {
     soundManager.playBell();
-    stampBanner.show('INFO POST');
     projectPanel.open();
   });
 
-  const honoursBoard = createHonoursBoard({ x: 0, z: -46 });
+  const honoursBoard = createHonoursBoard(ground, { x: 0, z: -46 });
 
   stageInteractions.addUpdatable(stumps.update);
   stageInteractions.addUpdatable(boundary.update);
@@ -122,6 +130,7 @@ function createGameDisposer(params: {
   pavilion: { dispose: () => void };
   scoreboard: { dispose: () => void };
   crowd: { dispose: () => void };
+  shadow: { dispose: () => void };
   sky: { dispose: () => void };
   vehicle: VehicleState;
   materials: { dispose: () => void };
@@ -142,6 +151,7 @@ function createGameDisposer(params: {
     params.pavilion.dispose();
     params.scoreboard.dispose();
     params.crowd.dispose();
+    params.shadow.dispose();
     params.sky.dispose();
     params.vehicle.model.dispose();
     params.materials.dispose();
@@ -151,10 +161,16 @@ function createGameDisposer(params: {
   };
 }
 
+// docs/06: placement teaches. The roller starts pointed at the info post.
+const INFO_POST = { x: 22, y: 0, z: 0 };
+const ROLLER_START = { x: 0, y: 0.6, z: 6 };
+const ROLLER_START_YAW = Math.atan2(INFO_POST.x - ROLLER_START.x, INFO_POST.z - ROLLER_START.z);
+
 function createWorldEntities(
   scene: THREE.Scene,
   world: RAPIER.World,
-  materials: ReturnType<typeof createSharedMaterials>
+  materials: ReturnType<typeof createSharedMaterials>,
+  ground: GroundData
 ) {
   const groundBase = createGroundBase(scene, world, RAPIER, materials, {
     hideNorthSightScreen: true
@@ -166,11 +182,18 @@ function createWorldEntities(
     RAPIER,
     materials,
     { x: -34, y: 0, z: -10 },
-    Math.PI / 4
+    Math.PI / 4,
+    ground
   );
-  const vehicle = createRoller(scene, world, RAPIER, materials, { x: 0, y: 0.6, z: 6 }, Math.PI);
+  const vehicle = createRoller(scene, world, RAPIER, materials, ROLLER_START, ROLLER_START_YAW);
   const crowd = createCrowd(scene);
-  return { groundBase, pavilion, scoreboard, vehicle, crowd };
+  const shadow = createBlobShadow(scene);
+  const followShadow = (): void => {
+    const { position, quaternion } = vehicle.model.group;
+    // Yaw straight from the quaternion; Euler .y flips past ±90°.
+    shadow.update(position.x, position.z, 2 * Math.atan2(quaternion.y, quaternion.w));
+  };
+  return { groundBase, pavilion, scoreboard, vehicle, crowd, shadow, followShadow };
 }
 
 function createCamera(): THREE.PerspectiveCamera {
@@ -189,6 +212,8 @@ function resolveDebug(optionsDebug?: boolean): boolean {
 export async function initGame(options: GameOptions): Promise<GameInstance> {
   const { canvas } = options;
 
+  // Renderer first: if WebGPU/WebGL2 setup fails, nothing else (DOM HUD, listeners) exists yet.
+  const { renderer, backend } = await createRenderer(canvas);
   await RAPIER.init();
   const { world, bodies } = createPhysicsWorld(RAPIER);
   const scene = new THREE.Scene();
@@ -196,15 +221,11 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
   const sky = createSkySystem(scene, sun, ambient);
 
   const materials = createSharedMaterials();
-  const { groundBase, pavilion, scoreboard, vehicle, crowd } = createWorldEntities(
-    scene,
-    world,
-    materials
-  );
+  const { groundBase, pavilion, scoreboard, vehicle, crowd, shadow, followShadow } =
+    createWorldEntities(scene, world, materials, options.ground);
   bodies.set('roller', vehicle.body);
 
   const camera = createCamera();
-  const { renderer, backend } = await createRenderer(canvas);
   const shouldDebug = resolveDebug(options.debug);
   const debugController = createDebugPanel(shouldDebug);
   const soundManager = createSoundManager();
@@ -235,7 +256,8 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
     materials,
     stageInteractions,
     soundManager,
-    stampBanner
+    stampBanner,
+    options.ground
   );
 
   const loop = startMainLoop({
@@ -244,7 +266,7 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
     stageInteractions,
     updateDebugPanel: debugController.update,
     soundManager,
-    extraUpdatables: [scoreboard.update, crowd.update, sky.update]
+    extraUpdatables: [scoreboard.update, crowd.update, sky.update, followShadow]
   });
   const cleanupResize = setupResizeHandler(camera, renderer, events);
 
@@ -261,6 +283,7 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
     pavilion,
     scoreboard,
     crowd,
+    shadow,
     sky,
     vehicle,
     materials,

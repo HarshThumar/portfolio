@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import { PALETTE } from './palette';
 import type { GameState } from '../types';
 
@@ -12,17 +12,16 @@ interface SpectatorData {
   x: number;
   baseY: number;
   z: number;
+  /** Ellipse angle atan2(z / 50, x / 42), the same one used for the roller. */
   theta: number;
 }
 
-const CROWD_COLORS = [
-  PALETTE.cream,
-  PALETTE.willow,
-  PALETTE.leather,
-  PALETTE.ink,
-  PALETTE.timber,
-  0xffffff
-];
+const FIELD_X = 42;
+const FIELD_Z = 50;
+const TWO_PI = Math.PI * 2;
+
+// Leather is the accent, so it is kept rare (about 1 in 13).
+const BODY_COLORS = [PALETTE.cream, PALETTE.willow, PALETTE.ink, PALETTE.timber];
 
 function createSpectatorGeometry(): THREE.BufferGeometry {
   const geo = new THREE.CylinderGeometry(0.18, 0.22, 0.7, 5);
@@ -40,82 +39,54 @@ function generateSpectatorPositions(): SpectatorData[] {
 
   for (const tier of tiers) {
     for (let i = 0; i < tier.count; i++) {
-      const theta = (i / tier.count) * Math.PI * 2;
-      const z = Math.sin(theta) * tier.radiusZ;
-
-      // Leave opening at North Pavilion End (z < -45) for Lord's pavilion
-      if (z < -45 && Math.abs(Math.cos(theta) * tier.radiusX) < 14) {
-        continue;
-      }
-
-      const x = Math.cos(theta) * tier.radiusX;
-      positions.push({ x, baseY: tier.y, z, theta });
+      const param = (i / tier.count) * TWO_PI;
+      const x = Math.cos(param) * tier.radiusX;
+      const z = Math.sin(param) * tier.radiusZ;
+      // Leave the opening at the pavilion end.
+      if (z < -45 && Math.abs(x) < 14) continue;
+      positions.push({ x, baseY: tier.y, z, theta: Math.atan2(z / FIELD_Z, x / FIELD_X) });
     }
   }
-
   return positions;
 }
 
-function initSpectatorInstances(
-  mesh: THREE.InstancedMesh,
-  spectators: SpectatorData[],
-  dummy: THREE.Object3D
-): void {
-  const color = new THREE.Color();
-  spectators.forEach((spec, i) => {
-    dummy.position.set(spec.x, spec.baseY, spec.z);
-    dummy.rotation.y = -spec.theta - Math.PI / 2;
-    dummy.scale.set(1, 1, 1);
-    dummy.updateMatrix();
-    mesh.setMatrixAt(i, dummy.matrix);
-
-    const hex = CROWD_COLORS[i % CROWD_COLORS.length] ?? PALETTE.cream;
-    color.setHex(hex);
-    mesh.setColorAt(i, color);
-  });
-  mesh.instanceMatrix.needsUpdate = true;
-  if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+function pickColor(index: number): number {
+  const h = Math.imul(index + 1, 2654435761) >>> 0;
+  if (h % 13 === 0) return PALETTE.leather;
+  return BODY_COLORS[(h >>> 8) % BODY_COLORS.length] ?? PALETTE.cream;
 }
 
-function calculateWaveOffset(
-  spec: SpectatorData,
-  rollerTheta: number,
-  rollerSpeed: number,
-  isNearBoundary: boolean,
-  isHonking: boolean,
-  waveTime: number
-): number {
+function wrapAngle(a: number): number {
+  let d = a;
+  while (d > Math.PI) d -= TWO_PI;
+  while (d < -Math.PI) d += TWO_PI;
+  return d;
+}
+
+interface WaveInput {
+  rollerTheta: number;
+  rollerSpeed: number;
+  nearBoundary: boolean;
+  honking: boolean;
+  waveTime: number;
+}
+
+function waveOffset(spec: SpectatorData, w: WaveInput): number {
   let offset = 0;
 
-  // Background idle Mexican wave circulating every ~8 seconds
-  const ripple = Math.sin(spec.theta * 2 - waveTime * 1.6);
-  if (ripple > 0.75) {
-    offset = (ripple - 0.75) * 1.2;
-  }
+  // Background idle wave circulating every few seconds.
+  const ripple = Math.sin(spec.theta * 2 - w.waveTime * 1.6);
+  if (ripple > 0.75) offset = (ripple - 0.75) * 1.2;
 
-  // Interactive wave following the roller when driving near the boundary
-  if (isNearBoundary && rollerSpeed > 1.2) {
-    let diff = spec.theta - rollerTheta;
-    while (diff > Math.PI) diff -= Math.PI * 2;
-    while (diff < -Math.PI) diff += Math.PI * 2;
-
-    const dist = Math.abs(diff);
-    if (dist < 0.6) {
+  if ((w.nearBoundary && w.rollerSpeed > 1.2) || w.honking) {
+    const dist = Math.abs(wrapAngle(spec.theta - w.rollerTheta));
+    if (w.nearBoundary && w.rollerSpeed > 1.2 && dist < 0.6) {
       offset = Math.max(offset, (1 - dist / 0.6) * 0.55);
     }
+    if (w.honking && dist < 1.2) offset = Math.max(offset, 0.6);
   }
-
-  // Reactive crowd cheer when honk button is pressed
-  if (isHonking) {
-    let diff = spec.theta - rollerTheta;
-    while (diff > Math.PI) diff -= Math.PI * 2;
-    while (diff < -Math.PI) diff += Math.PI * 2;
-    if (Math.abs(diff) < 1.2) {
-      offset = Math.max(offset, 0.6);
-    }
-  }
-
-  return offset;
+  // Quantised so tiny drifts do not force a matrix rewrite.
+  return Math.round(offset * 100) / 100;
 }
 
 export function createCrowd(scene: THREE.Scene): CrowdInstance {
@@ -128,49 +99,59 @@ export function createCrowd(scene: THREE.Scene): CrowdInstance {
   mesh.receiveShadow = false;
 
   const dummy = new THREE.Object3D();
-  initSpectatorInstances(mesh, spectators, dummy);
+  const color = new THREE.Color();
+  const lastOffset = new Float64Array(spectators.length);
+  const wave: WaveInput = {
+    rollerTheta: 0,
+    rollerSpeed: 0,
+    nearBoundary: false,
+    honking: false,
+    waveTime: 0
+  };
+
+  function writeInstance(i: number, spec: SpectatorData, yOffset: number): void {
+    dummy.position.set(spec.x, spec.baseY + yOffset, spec.z);
+    dummy.rotation.y = -spec.theta - Math.PI / 2;
+    dummy.scale.set(1, 1 + yOffset * 0.4, 1);
+    dummy.updateMatrix();
+    mesh.setMatrixAt(i, dummy.matrix);
+  }
+
+  spectators.forEach((spec, i) => {
+    writeInstance(i, spec, 0);
+    mesh.setColorAt(i, color.setHex(pickColor(i)));
+  });
+  mesh.instanceMatrix.needsUpdate = true;
+  if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   scene.add(mesh);
 
-  let waveTime = 0;
-
   function update(state: GameState): void {
-    const dt = state.time.dt || 0.016;
-    waveTime += dt;
-
+    wave.waveTime += state.time.dt || 0.016;
+    wave.honking = state.inputs.horn;
     const vehicle = state.vehicle;
-    let rollerTheta = 0;
-    let rollerSpeed = 0;
-    let isNearBoundary = false;
-
+    wave.rollerSpeed = 0;
+    wave.nearBoundary = false;
     if (vehicle) {
       const pos = vehicle.currentPosition;
-      rollerTheta = Math.atan2(pos.z, pos.x);
-      rollerSpeed = vehicle.speed;
-      const radius = Math.hypot(pos.x, pos.z);
-      isNearBoundary = radius > 32 && radius < 48;
+      const nx = pos.x / FIELD_X;
+      const nz = pos.z / FIELD_Z;
+      const distSq = nx * nx + nz * nz;
+      wave.rollerTheta = Math.atan2(nz, nx);
+      wave.rollerSpeed = Math.abs(vehicle.speed);
+      wave.nearBoundary = distSq > 0.58 && distSq < 1.3;
     }
 
-    const isHonking = state.inputs.horn;
-
-    spectators.forEach((spec, i) => {
-      const yOffset = calculateWaveOffset(
-        spec,
-        rollerTheta,
-        rollerSpeed,
-        isNearBoundary,
-        isHonking,
-        waveTime
-      );
-
-      dummy.position.set(spec.x, spec.baseY + yOffset, spec.z);
-      dummy.rotation.y = -spec.theta - Math.PI / 2;
-      const scaleY = 1 + yOffset * 0.4;
-      dummy.scale.set(1, scaleY, 1);
-      dummy.updateMatrix();
-      mesh.setMatrixAt(i, dummy.matrix);
-    });
-
-    mesh.instanceMatrix.needsUpdate = true;
+    let dirty = false;
+    for (let i = 0; i < spectators.length; i++) {
+      const spec = spectators[i];
+      if (!spec) continue;
+      const yOffset = waveOffset(spec, wave);
+      if (yOffset === lastOffset[i]) continue;
+      lastOffset[i] = yOffset;
+      writeInstance(i, spec, yOffset);
+      dirty = true;
+    }
+    if (dirty) mesh.instanceMatrix.needsUpdate = true;
   }
 
   return {
@@ -178,6 +159,7 @@ export function createCrowd(scene: THREE.Scene): CrowdInstance {
     update,
     dispose: () => {
       scene.remove(mesh);
+      mesh.dispose();
       geo.dispose();
       mat.dispose();
     }

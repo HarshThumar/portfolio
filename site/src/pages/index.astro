@@ -1,71 +1,10 @@
 ---
-// Dev mount for the 3D world. M1/M2 replace this with the real intro and a lazy-loaded island.
-import '../styles/tokens.css';
-import '../styles/fonts.css';
+// Until M2 builds the walkout intro and the map, the home page drops you at Lord's.
+import GroundPage from '../layouts/GroundPage.astro';
+import grounds from '../content/grounds.json';
 
-const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const lords = grounds.find((ground) => ground.slug === 'lords');
+if (!lords) throw new Error("grounds.json has no Lord's entry");
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
-    <meta
-      name="description"
-      content="[[COPY: meta description for the home page, written by Harsh]]"
-    />
-    <title>The Test Tour | Harsh Thumar</title>
-    <style>
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      body,
-      html {
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        background-color: var(--cream);
-        color: var(--ink);
-        font-family: var(--font-body);
-      }
-      .skip-link {
-        position: absolute;
-        top: -40px;
-        left: 0;
-        background: var(--ink);
-        color: var(--cream);
-        padding: 8px 16px;
-        z-index: 100;
-        text-decoration: none;
-      }
-      .skip-link:focus {
-        top: 0;
-        outline: 2px solid var(--leather);
-      }
-      #tour-canvas {
-        display: block;
-        width: 100vw;
-        height: 100vh;
-      }
-    </style>
-  </head>
-  <body>
-    <a href={`${base}scorecard/`} class="skip-link">
-      [[COPY: skip link to the Scorecard view]]
-    </a>
-    <canvas id="tour-canvas" aria-label="[[COPY: canvas label for screen readers]]"></canvas>
-
-    <script>
-      const canvas = document.getElementById('tour-canvas');
-      if (canvas instanceof HTMLCanvasElement) {
-        import('game').then(async ({ initGame }) => {
-          await initGame({ canvas });
-        });
-      }
-    </script>
-  </body>
-</html>
+<GroundPage ground={lords} title="The Test Tour | Harsh Thumar" />

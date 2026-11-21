@@ -43,12 +43,12 @@
       {
         "label": "Lemma checks",
         "value": "376",
-        "source": "CI test run"
+        "source": "Run in CI on the public repo"
       },
       {
         "label": "Protocol models",
         "value": "9",
-        "source": "Tamarin repository models"
+        "source": "In the public repo"
       },
       {
         "label": "Advisories rediscovered",
@@ -83,22 +83,22 @@
       {
         "label": "Deterministic forensic checks",
         "value": "30+",
-        "source": "Rule engine verification"
+        "source": "Findings the LLM must cite"
       },
       {
         "label": "Automated tests",
         "value": "580+",
-        "source": "Test suite with LLM PR-review in CI"
+        "source": "With an LLM PR-review step in CI"
       },
       {
         "label": "PDF highlight lookups",
         "value": "3–5 s",
-        "source": "Chunk-index grounding (reduced from 20–30 s)"
+        "source": "Down from 20–30 s, via chunk-index grounding"
       },
       {
         "label": "Guided income playbooks",
         "value": "46",
-        "source": "CAM Excel workbook conversions with golden tests"
+        "source": "From the lender's 46 business-type CAM workbooks, with golden tests"
       }
     ],
     "links": []
@@ -119,32 +119,32 @@
       {
         "label": "Violations caught",
         "value": "100%",
-        "source": "62-case test suite"
+        "source": "LLM compliance reviewer, 62-case test"
       },
       {
         "label": "False positives",
         "value": "0",
-        "source": "62-case test suite"
+        "source": "Same 62-case test"
       },
       {
         "label": "Adversarial red-team catch rate",
         "value": "16/18",
-        "source": "Red-team test set"
+        "source": "Adversarial red-team set"
       },
       {
         "label": "Languages",
         "value": "4",
-        "source": "Multilingual generation"
+        "source": "Posts and client messages"
       },
       {
         "label": "Formats",
         "value": "7",
-        "source": "Supported output formats"
+        "source": "Posts and client messages"
       },
       {
         "label": "Cost per draft",
         "value": "₹2.9",
-        "source": "Internal spend ledger"
+        "source": "About, from the spend ledger"
       }
     ],
     "links": []
@@ -165,32 +165,32 @@
       {
         "label": "Fund houses",
         "value": "55",
-        "source": "Covered fund houses"
+        "source": "Covered by the data lake"
       },
       {
         "label": "Holdings rows",
         "value": "7.7M",
-        "source": "Data lake storage"
+        "source": "From 63.8K source files"
       },
       {
         "label": "NAV rows",
         "value": "8.6M",
-        "source": "Data lake storage"
+        "source": "From 63.8K source files"
       },
       {
         "label": "Deal rows",
         "value": "3.8M",
-        "source": "Data lake storage"
+        "source": "From 63.8K source files"
       },
       {
         "label": "Source files",
         "value": "63.8K",
-        "source": "Ingested source files"
+        "source": "Ingested"
       },
       {
         "label": "Quality gates",
         "value": "7",
-        "source": "Publish verification gates"
+        "source": "Before an atomic publish with rollback"
       }
     ],
     "links": []
@@ -211,22 +211,22 @@
       {
         "label": "Throughput gain",
         "value": "9x",
-        "source": "k6 benchmark comparison"
+        "source": "After the fix, k6 load test"
       },
       {
         "label": "Failure threshold before fix",
         "value": "~50",
-        "source": "Initial k6 load test"
+        "source": "Users when the database collapsed, k6 load test"
       },
       {
         "label": "p95 latency before fix",
         "value": "27.5 s",
-        "source": "k6 load test run"
+        "source": "k6 load test"
       },
       {
         "label": "p95 latency after fix",
         "value": "1.5 s",
-        "source": "Optimized benchmark run"
+        "source": "k6 load test"
       }
     ],
     "links": []
@@ -247,22 +247,22 @@
       {
         "label": "Lots replayed",
         "value": "1,019",
-        "source": "2022–26 IPL auctions replay"
+        "source": "All lots of the 2022–26 IPL auctions, replayed exactly"
       },
       {
         "label": "Engine test suite",
         "value": "106",
-        "source": "Engine tests, 0 rule violations"
+        "source": "0 rule violations"
       },
       {
         "label": "Bid-decision rows",
         "value": "5,405",
-        "source": "Historical auction dataset"
+        "source": "Bid-decision dataset"
       },
       {
         "label": "Franchise agents",
         "value": "10",
-        "source": "AI franchise agents in development"
+        "source": "AI franchise agents, in development"
       }
     ],
     "links": [
@@ -288,7 +288,7 @@
       {
         "label": "GAIA Level 1 score",
         "value": "18/20",
-        "source": "Hugging Face Agents Course GAIA Level 1 benchmark"
+        "source": "Hugging Face Agents Course GAIA Level 1 set (90%)"
       },
       {
         "label": "Model API cost",
@@ -298,7 +298,7 @@
       {
         "label": "Integrated tools",
         "value": "13",
-        "source": "Search, Python sandbox, vision, Whisper, Stockfish chess"
+        "source": "Search, Python sandbox, vision, Whisper, chess via Stockfish"
       }
     ],
     "links": [
@@ -329,7 +329,7 @@
       {
         "label": "Program types evaluated",
         "value": "3",
-        "source": "Supported grant programs"
+        "source": "Program types"
       }
     ],
     "links": []

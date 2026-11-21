@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import type RAPIER from '@dimforge/rapier3d-compat';
 import { createRollerModel, type RollerModel } from './roller-model';
 import type { SharedMaterials } from '../world/palette';
@@ -14,8 +14,9 @@ function createRollerPhysics(
   const bodyDesc = rapier.RigidBodyDesc.dynamic()
     .setTranslation(startPos.x, startPos.y, startPos.z)
     .setRotation({ x: 0, y: Math.sin(half), z: 0, w: Math.cos(half) })
-    .setLinearDamping(1.8)
-    .setAngularDamping(4.0)
+    // Roll and pitch are locked: a roller doesn't tip, and driving sets velocity directly
+    // (vehicle/roller-drive.ts), so no damping here.
+    .enabledRotations(false, true, false)
     .setCanSleep(false);
 
   const body = world.createRigidBody(bodyDesc);
@@ -23,7 +24,8 @@ function createRollerPhysics(
   // Main chassis collider
   const chassisColliderDesc = rapier.ColliderDesc.cuboid(0.7, 0.45, 1.1)
     .setDensity(1200)
-    .setFriction(0.6)
+    .setFriction(0)
+    .setFrictionCombineRule(rapier.CoefficientCombineRule.Min)
     .setRestitution(0.1);
   world.createCollider(chassisColliderDesc, body);
 
@@ -53,6 +55,7 @@ export function createRoller(
     body,
     model,
     speed: 0,
+    intent: { forward: 0, steer: 0, brake: false },
     driveTarget: null,
     previousPosition: currentPos.clone(),
     previousRotation: currentRot.clone(),

@@ -1,0 +1,87 @@
+/* Page shell and shared rules for the DOM UI the game adds (HUD, panels, banners). */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+#tour-canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  touch-action: none;
+}
+
+button {
+  font-family: var(--font-body);
+}
+
+/* docs/08: focus rings are leather red, everywhere. */
+:focus-visible {
+  outline: 2px solid var(--leather);
+  outline-offset: 2px;
+}
+
+.hud {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1200;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--ink);
+  color: var(--cream);
+  padding: 8px 16px;
+  z-index: 100;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+.load-error {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--cream);
+  text-align: center;
+}
+
+.load-error[hidden] {
+  display: none;
+}
+
+.load-error a {
+  color: var(--leather);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

@@ -21,7 +21,8 @@ export function createStageUi(updateDebugPanel?: (state: GameState) => void): St
 
       state.perf.bodies = state.physics.world.bodies.len();
 
-      if (state.debug.enabled && updateDebugPanel) {
+      // The panel can be opened with ` or F3 even without ?debug; it skips work while hidden.
+      if (updateDebugPanel) {
         updateDebugPanel(state);
       }
     }

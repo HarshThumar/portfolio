@@ -1,0 +1,54 @@
+import type RAPIER from '@dimforge/rapier3d-compat';
+import { SIGHT_SCREEN_HALF_WIDTH, SIGHT_SCREEN_HEIGHT, SIGHT_SCREEN_Z } from './ground-stands';
+
+// The wall hugs the stands so the rope-to-wall strip stays drivable for the SIX moment.
+const WALL_RADIUS_X = 44.75;
+const WALL_RADIUS_Z = 52.75;
+const WALL_SEGMENTS = 72;
+
+interface YawQuat {
+  x: number;
+  y: number;
+  z: number;
+  w: number;
+}
+
+export function yawQuaternion(yaw: number): YawQuat {
+  return { x: 0, y: Math.sin(yaw / 2), z: 0, w: Math.cos(yaw / 2) };
+}
+
+/** Floor slab, perimeter wall ring and sight screen blocks, all on one fixed body. */
+export function createFieldColliders(
+  world: RAPIER.World,
+  rapier: typeof RAPIER,
+  hideNorthSightScreen: boolean
+): () => void {
+  const body = world.createRigidBody(rapier.RigidBodyDesc.fixed());
+  world.createCollider(rapier.ColliderDesc.cuboid(60, 0.5, 60).setTranslation(0, -0.5, 0), body);
+
+  for (let i = 0; i < WALL_SEGMENTS; i++) {
+    const a0 = (i / WALL_SEGMENTS) * Math.PI * 2;
+    const a1 = ((i + 1) / WALL_SEGMENTS) * Math.PI * 2;
+    const x0 = Math.cos(a0) * WALL_RADIUS_X;
+    const z0 = Math.sin(a0) * WALL_RADIUS_Z;
+    const dx = Math.cos(a1) * WALL_RADIUS_X - x0;
+    const dz = Math.sin(a1) * WALL_RADIUS_Z - z0;
+    const desc = rapier.ColliderDesc.cuboid(Math.hypot(dx, dz) / 2 + 0.2, 2, 0.25)
+      .setTranslation(x0 + dx / 2, 2, z0 + dz / 2)
+      .setRotation(yawQuaternion(Math.atan2(-dz, dx)));
+    world.createCollider(desc, body);
+  }
+
+  const half = SIGHT_SCREEN_HEIGHT / 2;
+  const screenZs = hideNorthSightScreen ? [SIGHT_SCREEN_Z] : [SIGHT_SCREEN_Z, -SIGHT_SCREEN_Z];
+  for (const z of screenZs) {
+    const desc = rapier.ColliderDesc.cuboid(SIGHT_SCREEN_HALF_WIDTH, half, 0.15).setTranslation(
+      0,
+      half,
+      z
+    );
+    world.createCollider(desc, body);
+  }
+
+  return () => world.removeRigidBody(body);
+}

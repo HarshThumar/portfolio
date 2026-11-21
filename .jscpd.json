@@ -9,7 +9,8 @@
     "**/progress/**",
     "**/.playwright-mcp/**",
     "**/package-lock.json",
-    "**/docs/**"
+    "**/docs/**",
+    "**/.tmp/**"
   ],
   "format": ["javascript", "typescript", "astro", "css", "json"]
 }

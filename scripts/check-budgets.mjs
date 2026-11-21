@@ -1,5 +1,7 @@
 import { statSync, readdirSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, extname } from 'node:path';
+import { gzipSync } from 'node:zlib';
+import { readFileSync } from 'node:fs';
 
 const MAX_TOTAL_SITE_BYTES = 25 * 1024 * 1024; // 25 MB
 const MAX_GROUND_BYTES = 3 * 1024 * 1024; // 3 MB
@@ -33,6 +35,28 @@ if (existsSync(distDir)) {
   }
 } else {
   console.log('[check-budgets] site/dist not yet built; skipping dist size check.');
+}
+
+// docs/05: first payload (code + styles + fonts the first ground needs, as sent over the
+// wire) target 3 MB, hard limit 5 MB. Until grounds load their own GLBs, that is all of _astro.
+const FIRST_PAYLOAD_TARGET = 3 * 1024 * 1024;
+const FIRST_PAYLOAD_MAX = 5 * 1024 * 1024;
+const codeDir = join(distDir, '_astro');
+if (existsSync(codeDir)) {
+  let wire = 0;
+  for (const entry of readdirSync(codeDir)) {
+    const bytes = readFileSync(join(codeDir, entry));
+    // woff2 is already compressed; servers gzip JS and CSS.
+    wire += extname(entry) === '.woff2' ? bytes.length : gzipSync(bytes).length;
+  }
+  const mb = (wire / (1024 * 1024)).toFixed(2);
+  console.log(`[check-budgets] First payload over the wire: ${mb} MB (target 3, max 5)`);
+  if (wire > FIRST_PAYLOAD_MAX) {
+    console.error(`[check-budgets] First payload ${mb} MB is over the 5 MB limit.`);
+    errors++;
+  } else if (wire > FIRST_PAYLOAD_TARGET) {
+    console.warn(`[check-budgets] First payload ${mb} MB is over the 3 MB target.`);
+  }
 }
 
 const assetsDir = 'assets';

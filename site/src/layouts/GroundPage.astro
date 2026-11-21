@@ -1,0 +1,66 @@
+---
+// One page shell for every drivable ground. The ground's data travels to the game as JSON
+// on the canvas, because game/ must not import site/ content (docs/05).
+import '../styles/tokens.css';
+import '../styles/fonts.css';
+import '../styles/game-ui.css';
+
+interface Props {
+  ground: { slug: string; name: string };
+  title: string;
+}
+
+const { ground, title } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+    <meta
+      name="description"
+      content={`[[COPY: meta description for ${ground.name}, written by Harsh]]`}
+    />
+    <title>{title}</title>
+  </head>
+  <body>
+    <a href={`${base}scorecard/`} class="skip-link">
+      [[COPY: skip link to the Scorecard view]]
+    </a>
+    <div id="hud" class="hud"></div>
+    <canvas
+      id="tour-canvas"
+      data-ground={JSON.stringify(ground)}
+      aria-label={`[[COPY: canvas label for ${ground.name}]]`}
+    ></canvas>
+    <div id="load-error" class="load-error" role="alert" hidden>
+      <p>[[COPY: the 3D ground failed to load (designed error state, in the site's voice)]]</p>
+      <a href={`${base}scorecard/`}>[[COPY: link to the Scorecard view]]</a>
+    </div>
+    <noscript>
+      <div class="load-error">
+        <p>[[COPY: this ground needs JavaScript]]</p>
+        <a href={`${base}scorecard/`}>[[COPY: link to the Scorecard view]]</a>
+      </div>
+    </noscript>
+
+    <script>
+      const canvas = document.getElementById('tour-canvas');
+      const showError = (): void => {
+        document.getElementById('load-error')?.removeAttribute('hidden');
+      };
+      if (canvas instanceof HTMLCanvasElement && canvas.dataset.ground) {
+        const ground = JSON.parse(canvas.dataset.ground);
+        import('game')
+          .then(({ initGame }) => initGame({ canvas, ground }))
+          .catch((error: unknown) => {
+            console.error('[tour] game failed to start', error);
+            showError();
+          });
+      }
+    </script>
+  </body>
+</html>

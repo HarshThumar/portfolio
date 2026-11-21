@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import type RAPIER from '@dimforge/rapier3d-compat';
 import type { SharedMaterials } from '../world/palette';
 import type { GameState } from '../types';
@@ -11,8 +11,8 @@ export interface InfoPostInstance {
 
 export function createInfoPost(
   scene: THREE.Scene,
-  world: RAPIER.World,
-  rapier: typeof RAPIER,
+  _world: RAPIER.World,
+  _rapier: typeof RAPIER,
   materials: SharedMaterials,
   position: { x: number; y: number; z: number },
   onTrigger: () => void
@@ -46,7 +46,7 @@ export function createInfoPost(
   group.add(frame);
   disposables.push(() => frameGeo.dispose());
 
-  // Brass bell on top
+  // Bell-shaped cap in the willow tint; the palette has no metal colour
   const bellGeo = new THREE.ConeGeometry(0.12, 0.18, 8);
   const bell = new THREE.Mesh(bellGeo, materials.willow);
   bell.position.set(0, 1.85, 0);
@@ -55,12 +55,7 @@ export function createInfoPost(
 
   scene.add(group);
 
-  // Rapier sensor collider
-  const sensorDesc = rapier.ColliderDesc.cylinder(0.9, 1.4)
-    .setTranslation(position.x, position.y + 0.9, position.z)
-    .setSensor(true);
-  const sensorCollider = world.createCollider(sensorDesc);
-
+  // Proximity is a plain distance check, so no physics collider is needed.
   let isInside = false;
   let cooldown = 0;
 
@@ -88,7 +83,6 @@ export function createInfoPost(
     update,
     dispose: () => {
       scene.remove(group);
-      world.removeCollider(sensorCollider, false);
       for (const fn of disposables) fn();
     }
   };

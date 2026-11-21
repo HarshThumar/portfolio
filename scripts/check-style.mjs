@@ -25,7 +25,8 @@ const IGNORE_DIRS = new Set([
   'coverage',
   '.playwright-mcp',
   'docs',
-  'scripts'
+  'scripts',
+  '.tmp'
 ]);
 
 const TOKENS_PATH = join('site', 'src', 'styles', 'tokens.css');

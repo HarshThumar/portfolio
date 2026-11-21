@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import type { SharedMaterials } from '../world/palette';
 
 export interface RollerModel {
@@ -19,11 +19,11 @@ function createDrums(materials: SharedMaterials): {
 
   const frontDrum = new THREE.Mesh(drumGeo, materials.ink);
   frontDrum.position.set(0, 0.5, 0.8);
-  frontDrum.castShadow = true;
+  frontDrum.castShadow = false;
 
   const rearDrum = new THREE.Mesh(drumGeo, materials.ink);
   rearDrum.position.set(0, 0.5, -0.8);
-  rearDrum.castShadow = true;
+  rearDrum.castShadow = false;
 
   return {
     frontDrum,
@@ -44,7 +44,7 @@ function createBodyFrame(materials: SharedMaterials): {
   const chassisGeo = new THREE.BoxGeometry(1.2, 0.5, 2.2);
   const chassis = new THREE.Mesh(chassisGeo, materials.willow);
   chassis.position.set(0, 0.75, 0);
-  chassis.castShadow = true;
+  chassis.castShadow = false;
   group.add(chassis);
   disposables.push(() => chassisGeo.dispose());
 
@@ -52,7 +52,7 @@ function createBodyFrame(materials: SharedMaterials): {
   const hoodGeo = new THREE.BoxGeometry(1.0, 0.5, 0.9);
   const hood = new THREE.Mesh(hoodGeo, materials.timber);
   hood.position.set(0, 1.1, 0.45);
-  hood.castShadow = true;
+  hood.castShadow = false;
   group.add(hood);
   disposables.push(() => hoodGeo.dispose());
 

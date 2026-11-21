@@ -2,7 +2,9 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "workspaces": {
     ".": {
-      "entry": ["scripts/**/*.mjs"]
+      "entry": ["scripts/**/*.mjs"],
+      // Unit tests drive the real physics engine, which is a dependency of the game workspace.
+      "ignoreDependencies": ["@dimforge/rapier3d-compat"]
     },
     "game": {
       "project": ["src/**/*.ts"]

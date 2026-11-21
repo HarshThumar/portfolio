@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 
 export const PALETTE = {
   cream: 0xf3ead3,
@@ -55,4 +55,9 @@ export function createSharedMaterials(): SharedMaterials {
       leather.dispose();
     }
   };
+}
+
+/** CSS colour string for canvas drawing, derived from the same palette. */
+export function cssColor(hex: number): string {
+  return `#${hex.toString(16).padStart(6, '0')}`;
 }

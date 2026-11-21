@@ -1,4 +1,4 @@
-import type * as THREE from 'three';
+import type * as THREE from 'three/webgpu';
 import type { WebGPURenderer } from 'three/webgpu';
 import type RAPIER from '@dimforge/rapier3d-compat';
 import type { TypedEmitter } from './events/emitter';
@@ -58,6 +58,8 @@ export interface VehicleState {
     dispose: () => void;
   };
   speed: number;
+  /** What the driver wants this frame; applied every fixed physics step. */
+  intent: { forward: number; steer: number; brake: boolean };
   driveTarget?: { x: number; z: number } | null;
   previousPosition: THREE.Vector3;
   previousRotation: THREE.Quaternion;
@@ -86,10 +88,27 @@ export interface Stage {
   update: (state: GameState, dt: number) => void;
 }
 
+/** One entry of site/src/content/grounds.json, passed in by the page (game/ never imports site/). */
+export interface GroundData {
+  id: number;
+  slug: string;
+  name: string;
+  projectId: string;
+  projectTitle: string;
+  org: string;
+  landmark: string;
+  tagline: string;
+  scoreboard: string;
+  facts: string;
+  panelText: string;
+  numbers: Array<{ label: string; value: string; source: string }>;
+  links: Array<{ label: string; url: string }>;
+}
+
 export interface GameOptions {
   canvas: HTMLCanvasElement;
+  ground: GroundData;
   debug?: boolean;
-  groundSlug?: string;
 }
 
 export interface GameInstance {

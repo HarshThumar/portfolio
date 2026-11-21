@@ -1,3 +1,6 @@
+import type { GroundData } from '../types';
+import { attachDialog } from './dialog';
+
 export interface ProjectPanelController {
   open: () => void;
   close: () => void;
@@ -5,121 +8,186 @@ export interface ProjectPanelController {
   destroy: () => void;
 }
 
-interface ProjectPanelData {
-  slug: string;
-  name: string;
-  projectId: string;
-  projectTitle: string;
-  tagline: string;
-  panelText: string;
-  numbers: Array<{ label: string; value: string; source: string }>;
-  links: Array<{ label: string; url: string }>;
+type Styles = Partial<CSSStyleDeclaration>;
+
+function el<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  styles: Styles,
+  text?: string
+): HTMLElementTagNameMap[K] {
+  const node = document.createElement(tag);
+  Object.assign(node.style, styles);
+  if (text !== undefined) node.textContent = text;
+  return node;
 }
 
-const DEFAULT_LORDS_DATA: ProjectPanelData = {
-  slug: 'lords',
-  name: "Lord's, London",
-  projectId: 'P1',
-  projectTitle: 'mcp-auth-tamarin: formal verification of MCP authorization',
-  tagline: "Lord's keeps the Laws of Cricket. This project checks the rules AI agents follow.",
-  panelText:
-    "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: Models MCP authorization flow in the Tamarin prover with 9 protocol models and 376 lemma checks run in CI. Rediscovered 3 published, already-fixed MCP SDK advisories. Started as IETF 127 Hackathon project (remote participant). Co-authored with Prince Upadhyay.]]",
-  numbers: [
-    { label: 'Lemma checks', value: '376', source: 'CI test run' },
-    { label: 'Protocol models', value: '9', source: 'Tamarin repository models' },
+/** Only https: and mailto: may become real links; anything else stays text. */
+function safeHref(url: string): string | null {
+  if (url.startsWith('[[')) return null;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' || parsed.protocol === 'mailto:' ? parsed.href : null;
+  } catch {
+    return null;
+  }
+}
+
+function buildNumbers(ground: GroundData): HTMLElement {
+  const row = el('div', { display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px' });
+  for (const num of ground.numbers) {
+    const card = el('div', {
+      flex: '1',
+      minWidth: '120px',
+      background: 'var(--cream)',
+      border: '2px solid var(--ink)',
+      borderRadius: 'var(--radius)',
+      padding: '10px',
+      textAlign: 'center'
+    });
+    card.append(
+      el(
+        'div',
+        { fontFamily: 'var(--font-display)', fontSize: '24px', color: 'var(--leather)' },
+        num.value
+      ),
+      el(
+        'div',
+        { fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', marginTop: '2px' },
+        num.label
+      ),
+      el(
+        'div',
+        { fontSize: '10px', color: 'var(--timber)', marginTop: '4px' },
+        `[[COPY: source caption]] ${num.source}`
+      )
+    );
+    row.appendChild(card);
+  }
+  return row;
+}
+
+function buildLink(link: { label: string; url: string }): HTMLElement {
+  const href = safeHref(link.url);
+  const style: Styles = {
+    display: 'inline-block',
+    padding: '6px 14px',
+    border: '2px solid var(--ink)',
+    borderRadius: 'var(--radius)',
+    fontSize: '12px',
+    fontWeight: '600'
+  };
+  if (!href) {
+    return el(
+      'span',
+      { ...style, borderStyle: 'dashed', color: 'var(--timber)' },
+      `${link.label}: ${link.url}`
+    );
+  }
+  const a = el('a', {
+    ...style,
+    background: 'var(--willow)',
+    color: 'var(--ink)',
+    textDecoration: 'none'
+  });
+  a.href = href;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.textContent = link.label;
+  return a;
+}
+
+function buildHeader(ground: GroundData, titleId: string) {
+  const header = el('div', {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    borderBottom: '2px solid var(--ink)',
+    paddingBottom: '10px',
+    marginBottom: '12px'
+  });
+  const heading = el('div', {});
+  heading.appendChild(
+    el(
+      'div',
+      {
+        fontSize: '11px',
+        fontWeight: '700',
+        letterSpacing: '1.5px',
+        color: 'var(--timber)',
+        textTransform: 'uppercase'
+      },
+      `${ground.name} · ${ground.projectId}`
+    )
+  );
+  const title = el(
+    'h2',
+    { margin: '4px 0 0 0', fontFamily: 'var(--font-display)', fontSize: '18px', lineHeight: '1.2' },
+    ground.projectTitle
+  );
+  title.id = titleId;
+  heading.appendChild(title);
+  const closeBtn = el(
+    'button',
     {
-      label: 'Advisories rediscovered',
-      value: '3',
-      source: 'Published, already-fixed MCP SDK advisories'
-    }
-  ],
-  links: [
-    {
-      label: 'GitHub Repository',
-      url: 'https://github.com/HarshThumar/mcp-auth-tamarin'
+      background: 'var(--leather)',
+      color: 'var(--cream)',
+      border: '2px solid var(--ink)',
+      borderRadius: 'var(--radius)',
+      padding: '4px 10px',
+      fontWeight: 'bold',
+      cursor: 'pointer',
+      fontSize: '12px'
     },
-    {
-      label: 'Write-up (with Prince Upadhyay)',
-      url: 'https://harshthumar.github.io'
-    }
-  ]
-};
-
-function renderScorecardNumbers(data: ProjectPanelData): string {
-  return data.numbers
-    .map(
-      (num) => `
-    <div style="flex: 1; min-width: 120px; background: rgba(30, 27, 22, 0.05); border: 2px solid var(--ink); border-radius: var(--radius); padding: 10px; text-align: center;">
-      <div style="font-family: var(--font-display); font-size: 24px; color: var(--leather);">${num.value}</div>
-      <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; margin-top: 2px; color: var(--ink);">${num.label}</div>
-      <div style="font-size: 9px; color: var(--timber); margin-top: 4px;">Source: ${num.source}</div>
-    </div>
-  `
-    )
-    .join('');
+    '[[COPY: close button label]]'
+  );
+  closeBtn.type = 'button';
+  header.append(heading, closeBtn);
+  return { header, closeBtn };
 }
 
-function renderScorecardLinks(data: ProjectPanelData): string {
-  return data.links
-    .map(
-      (link) => `
-    <a href="${link.url}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 6px 14px; background: var(--willow); color: var(--ink); border: 2px solid var(--ink); border-radius: var(--radius); text-decoration: none; font-size: 11px; font-weight: 600;">
-      ${link.label} ↗
-    </a>
-  `
-    )
-    .join('');
+function buildFooter(ground: GroundData, onMap: () => void): HTMLElement {
+  const footer = el('div', {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '10px',
+    paddingTop: '10px',
+    borderTop: '1px dashed var(--timber)'
+  });
+  const links = el('div', { display: 'flex', gap: '8px', flexWrap: 'wrap' });
+  ground.links.forEach((link) => links.appendChild(buildLink(link)));
+
+  const actions = el('div', { display: 'flex', gap: '8px' });
+  const buttonStyle: Styles = {
+    border: '1px solid var(--ink)',
+    borderRadius: 'var(--radius)',
+    padding: '5px 10px',
+    fontSize: '11px',
+    cursor: 'pointer'
+  };
+  const map = el(
+    'button',
+    { ...buttonStyle, background: 'var(--cream)', color: 'var(--ink)' },
+    '[[COPY: map button label]]'
+  );
+  map.type = 'button';
+  map.addEventListener('click', onMap);
+  // Only one ground exists in this build, so there is nothing to advance to.
+  const next = el(
+    'button',
+    { ...buttonStyle, background: 'var(--ink)', color: 'var(--cream)', cursor: 'not-allowed' },
+    '[[COPY: next ground button label]]'
+  );
+  next.type = 'button';
+  next.disabled = true;
+  actions.append(map, next);
+  footer.append(links, actions);
+  return footer;
 }
 
-function buildPanelHtml(data: ProjectPanelData): string {
-  return `
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--ink); padding-bottom: 10px; margin-bottom: 12px;">
-      <div>
-        <div style="font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: var(--timber); text-transform: uppercase;">
-          ${data.name} · ${data.projectId}
-        </div>
-        <h2 id="project-panel-title" style="margin: 4px 0 0 0; font-family: var(--font-display); font-size: 18px; color: var(--ink); line-height: 1.2;">
-          ${data.projectTitle}
-        </h2>
-      </div>
-      <button id="close-project-panel-btn" aria-label="Close scorecard panel" style="background: var(--leather); color: var(--cream); border: 2px solid var(--ink); border-radius: var(--radius); padding: 4px 10px; font-weight: bold; cursor: pointer; font-size: 12px;">
-        ✕
-      </button>
-    </div>
-
-    <div id="project-panel-body" style="font-size: 13px; line-height: 1.5; color: var(--ink); margin-bottom: 14px; background: rgba(243, 234, 211, 0.7); padding: 10px; border-left: 3px solid var(--timber);">
-      ${data.panelText}
-    </div>
-
-    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px;">
-      ${renderScorecardNumbers(data)}
-    </div>
-
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding-top: 10px; border-top: 1px dashed var(--timber);">
-      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        ${renderScorecardLinks(data)}
-      </div>
-      <div style="display: flex; gap: 8px;">
-        <button id="back-to-map-btn" style="background: transparent; color: var(--ink); border: 1px solid var(--ink); border-radius: var(--radius); padding: 5px 10px; font-size: 11px; cursor: pointer;">
-          Map
-        </button>
-        <button id="next-ground-btn" style="background: var(--ink); color: var(--cream); border: 1px solid var(--ink); border-radius: var(--radius); padding: 5px 12px; font-size: 11px; cursor: pointer;">
-          Next Ground →
-        </button>
-      </div>
-    </div>
-  `;
-}
-
-function createPanelElement(data: ProjectPanelData): HTMLElement {
-  const panel = document.createElement('section');
-  panel.id = 'project-scorecard-panel';
-  panel.setAttribute('role', 'dialog');
-  panel.setAttribute('aria-modal', 'false');
-  panel.setAttribute('aria-labelledby', 'project-panel-title');
-  panel.setAttribute('aria-describedby', 'project-panel-body');
-
-  Object.assign(panel.style, {
+function buildPanel(ground: GroundData) {
+  const panel = el('section', {
     position: 'fixed',
     bottom: '0',
     left: '50%',
@@ -127,56 +195,69 @@ function createPanelElement(data: ProjectPanelData): HTMLElement {
     width: 'min(96vw, 680px)',
     maxHeight: '80vh',
     overflowY: 'auto',
-    backgroundColor: 'var(--cream)',
+    background: 'var(--cream)',
     color: 'var(--ink)',
     border: '3px solid var(--ink)',
     borderBottom: 'none',
     borderTopLeftRadius: 'var(--radius)',
     borderTopRightRadius: 'var(--radius)',
     padding: '20px 24px',
-    boxShadow: '0 -4px 16px rgba(30, 27, 22, 0.25)',
+    boxShadow: '3px 3px 0 var(--ink)',
     zIndex: '2000',
-    fontFamily: 'var(--font-body)',
-    transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
+    fontFamily: 'var(--font-body)'
   });
+  panel.id = 'project-scorecard-panel';
+  panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-modal', 'true');
+  panel.setAttribute('aria-labelledby', 'project-panel-title');
+  panel.setAttribute('aria-describedby', 'project-panel-body');
 
-  panel.innerHTML = buildPanelHtml(data);
-  document.body.appendChild(panel);
-  return panel;
+  const { header, closeBtn } = buildHeader(ground, 'project-panel-title');
+  const body = el(
+    'div',
+    {
+      fontSize: '13px',
+      lineHeight: '1.5',
+      marginBottom: '14px',
+      background: 'var(--cream)',
+      padding: '10px',
+      borderLeft: '3px solid var(--timber)'
+    },
+    ground.panelText
+  );
+  body.id = 'project-panel-body';
+  return { panel, closeBtn, header, body };
 }
 
-export function createProjectPanel(
-  data: ProjectPanelData = DEFAULT_LORDS_DATA
-): ProjectPanelController {
-  const panel = createPanelElement(data);
-  const closeBtn = panel.querySelector<HTMLButtonElement>('#close-project-panel-btn');
-  let isOpenState = false;
+export function createProjectPanel(ground: GroundData): ProjectPanelController {
+  const { panel, closeBtn, header, body } = buildPanel(ground);
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  function open(): void {
-    isOpenState = true;
-    panel.style.transform = 'translateX(-50%) translateY(0)';
-    closeBtn?.focus();
-  }
+  const dialog = attachDialog(panel, closeBtn, {
+    onOpen: () => {
+      // Reflow first so the slide-in transition actually runs from the hidden pose.
+      panel.style.transition = reduceMotion.matches
+        ? 'none'
+        : 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
+      void panel.offsetHeight;
+      panel.style.transform = 'translateX(-50%) translateY(0)';
+    },
+    onClose: () => {
+      panel.style.transform = 'translateX(-50%) translateY(105%)';
+    }
+  });
 
-  function close(): void {
-    isOpenState = false;
-    panel.style.transform = 'translateX(-50%) translateY(105%)';
-  }
-
-  closeBtn?.addEventListener('click', close);
-
-  const onKeyDown = (e: KeyboardEvent): void => {
-    if (e.key === 'Escape' && isOpenState) close();
-  };
-  window.addEventListener('keydown', onKeyDown);
+  panel.append(header, body, buildNumbers(ground), buildFooter(ground, dialog.close));
+  closeBtn.addEventListener('click', dialog.close);
+  document.body.appendChild(panel);
 
   return {
-    open,
-    close,
-    isOpen: () => isOpenState,
+    open: dialog.open,
+    close: dialog.close,
+    isOpen: dialog.isOpen,
     destroy: () => {
-      window.removeEventListener('keydown', onKeyDown);
-      if (panel.parentNode) panel.parentNode.removeChild(panel);
+      dialog.destroy();
+      panel.remove();
     }
   };
 }

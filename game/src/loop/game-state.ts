@@ -1,4 +1,4 @@
-import type * as THREE from 'three';
+import type * as THREE from 'three/webgpu';
 import RAPIER from '@dimforge/rapier3d-compat';
 import type { WebGPURenderer } from 'three/webgpu';
 import type { TypedEmitter } from '../events/emitter';

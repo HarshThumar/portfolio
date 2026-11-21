@@ -6,48 +6,58 @@ export interface StampBanner {
 export function createStampBanner(): StampBanner {
   const el = document.createElement('div');
   el.id = 'cricket-stamp-banner';
-  el.setAttribute('aria-live', 'polite');
+  el.setAttribute('role', 'status');
 
   Object.assign(el.style, {
     position: 'fixed',
     top: '28px',
     left: '50%',
     transform: 'translateX(-50%) scale(0.9)',
-    backgroundColor: 'var(--cream, #f3ead3)',
-    color: 'var(--leather, #a3271f)',
-    border: '3px solid var(--leather, #a3271f)',
-    borderRadius: 'var(--radius, 4px)',
+    backgroundColor: 'var(--cream)',
+    color: 'var(--leather)',
+    border: '3px solid var(--leather)',
+    borderRadius: 'var(--radius)',
     padding: '8px 24px',
-    fontFamily: 'var(--font-display, "Alfa Slab One", serif)',
+    fontFamily: 'var(--font-display)',
     fontSize: '24px',
     letterSpacing: '2px',
     zIndex: '2000',
     opacity: '0',
     pointerEvents: 'none',
-    transition: 'opacity 0.25s ease, transform 0.25s ease',
-    boxShadow: '3px 3px 0 var(--ink, #1e1b16)'
+    boxShadow: '3px 3px 0 var(--ink)'
   });
 
   document.body.appendChild(el);
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
   let timeoutId = 0;
+
+  // Reduced motion keeps the banner readable but fades only, with no scale or tilt.
+  const applyPose = (visible: boolean): void => {
+    el.style.transition = motion.matches
+      ? 'opacity 0.25s ease'
+      : 'opacity 0.25s ease, transform 0.25s ease';
+    el.style.opacity = visible ? '1' : '0';
+    if (motion.matches) {
+      el.style.transform = 'translateX(-50%)';
+    } else {
+      el.style.transform = visible
+        ? 'translateX(-50%) scale(1.0) rotate(-2deg)'
+        : 'translateX(-50%) scale(0.9)';
+    }
+  };
 
   function show(text: string): void {
     el.textContent = text;
-    el.style.opacity = '1';
-    el.style.transform = 'translateX(-50%) scale(1.0) rotate(-2deg)';
-
+    applyPose(true);
     if (timeoutId) clearTimeout(timeoutId);
-    timeoutId = window.setTimeout(() => {
-      el.style.opacity = '0';
-      el.style.transform = 'translateX(-50%) scale(0.9)';
-    }, 2200);
+    timeoutId = window.setTimeout(() => applyPose(false), 2200);
   }
 
   return {
     show,
     destroy: () => {
       if (timeoutId) clearTimeout(timeoutId);
-      if (el.parentNode) el.parentNode.removeChild(el);
+      el.remove();
     }
   };
 }

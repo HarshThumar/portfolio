@@ -55,7 +55,8 @@ const IGNORE_DIRS = new Set([
   '.astro',
   'coverage',
   '.playwright-mcp',
-  'test-results'
+  'test-results',
+  '.tmp'
 ]);
 
 // Files where visible copy can live: banned words and smells are checked here.

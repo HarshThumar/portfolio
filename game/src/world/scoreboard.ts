@@ -1,7 +1,10 @@
-import * as THREE from 'three';
+import * as THREE from 'three/webgpu';
 import type RAPIER from '@dimforge/rapier3d-compat';
 import type { SharedMaterials } from './palette';
-import type { GameState } from '../types';
+import type { GameState, GroundData } from '../types';
+import { createMergeBatch, type MergedGroup } from './merge-batch';
+import { yawQuaternion } from './ground-colliders';
+import { createScoreTiles, parseScoreboard } from './scoreboard-tiles';
 
 export interface ScoreboardInstance {
   group: THREE.Group;
@@ -10,102 +13,27 @@ export interface ScoreboardInstance {
   dispose: () => void;
 }
 
-interface ScoreboardData {
-  title: string;
-  items: Array<{ label: string; value: string }>;
+const FLIP_SECONDS = 0.5;
+const FLIP_STAGGER = 0.12;
+const APPROACH_DISTANCE = 18;
+const REARM_DISTANCE = 26;
+const FRAME_HEIGHT = 6;
+
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
-const DEFAULT_LORDS_SCORE: ScoreboardData = {
-  title: "LORD'S CRICKET GROUND",
-  items: [
-    { label: 'CHECKS', value: '376' },
-    { label: 'MODELS', value: '9' },
-    { label: 'REDISCOVERED', value: '3' }
-  ]
-};
-
-function drawTileCanvas(label: string, value: string): HTMLCanvasElement {
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 320;
-  const ctx = canvas.getContext('2d');
-  if (ctx) {
-    ctx.fillStyle = '#1e1b16';
-    ctx.fillRect(0, 0, 256, 320);
-
-    ctx.fillStyle = '#f3ead3';
-    ctx.fillRect(8, 8, 240, 304);
-
-    ctx.fillStyle = '#1e1b16';
-    ctx.font = 'bold 24px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(label, 128, 48);
-
-    ctx.fillStyle = '#1e1b16';
-    ctx.fillRect(16, 64, 224, 3);
-
-    ctx.fillStyle = '#a3271f';
-    ctx.font = 'bold 100px sans-serif';
-    ctx.fillText(value, 128, 200);
-
-    ctx.fillStyle = 'rgba(30, 27, 22, 0.2)';
-    ctx.fillRect(8, 158, 240, 4);
-  }
-  return canvas;
-}
-
-function createScoreTiles(
-  data: ScoreboardData,
-  disposables: Array<() => void>
-): { tilesGroup: THREE.Group; flipTiles: THREE.Mesh[] } {
-  const tilesGroup = new THREE.Group();
-  const flipTiles: THREE.Mesh[] = [];
-
-  const tileGeo = new THREE.BoxGeometry(2.0, 2.5, 0.08);
-  disposables.push(() => tileGeo.dispose());
-
-  const positionsX = [-2.6, 0, 2.6];
-
-  data.items.forEach((item, idx) => {
-    const canvas = drawTileCanvas(item.label, item.value);
-    const texture = new THREE.CanvasTexture(canvas);
-    disposables.push(() => texture.dispose());
-
-    const mat = new THREE.MeshLambertMaterial({ map: texture });
-    disposables.push(() => mat.dispose());
-
-    const mesh = new THREE.Mesh(tileGeo, mat);
-    mesh.position.set(positionsX[idx] ?? 0, 3.2, 0.1);
-    mesh.castShadow = true;
-
-    flipTiles.push(mesh);
-    tilesGroup.add(mesh);
-  });
-
-  return { tilesGroup, flipTiles };
-}
-
-function createFrame(materials: SharedMaterials): THREE.Group {
-  const frame = new THREE.Group();
-
-  const postGeo = new THREE.BoxGeometry(0.35, 6.0, 0.35);
-  const leftPost = new THREE.Mesh(postGeo, materials.timber);
-  leftPost.position.set(-4.2, 3.0, 0);
-  const rightPost = new THREE.Mesh(postGeo, materials.timber);
-  rightPost.position.set(4.2, 3.0, 0);
-  frame.add(leftPost, rightPost);
-
-  const backboardGeo = new THREE.BoxGeometry(8.2, 4.2, 0.15);
-  const backboard = new THREE.Mesh(backboardGeo, materials.ink);
-  backboard.position.set(0, 3.4, -0.05);
-  frame.add(backboard);
-
-  const headerGeo = new THREE.BoxGeometry(8.6, 0.6, 0.3);
-  const header = new THREE.Mesh(headerGeo, materials.timber);
-  header.position.set(0, 5.6, 0);
-  frame.add(header);
-
-  return frame;
+function buildFrame(materials: SharedMaterials): MergedGroup {
+  const b = createMergeBatch();
+  b.box(materials.timber, 0.35, FRAME_HEIGHT, 0.35, -4.2, 3, 0);
+  b.box(materials.timber, 0.35, FRAME_HEIGHT, 0.35, 4.2, 3, 0);
+  b.box(materials.ink, 8.2, 4.2, 0.15, 0, 3.4, -0.05);
+  b.box(materials.timber, 8.6, 0.6, 0.3, 0, 5.6, 0);
+  // Tiles hang forward of the board on a rail so a full turn never touches it.
+  b.box(materials.timber, 8.4, 0.14, 0.14, 0, 4.7, 1.1);
+  b.box(materials.timber, 0.14, 0.14, 1.1, -4.2, 4.7, 0.55);
+  b.box(materials.timber, 0.14, 0.14, 1.1, 4.2, 4.7, 0.55);
+  return b.build();
 }
 
 export function createScoreboard(
@@ -113,60 +41,69 @@ export function createScoreboard(
   world: RAPIER.World,
   rapier: typeof RAPIER,
   materials: SharedMaterials,
-  position = { x: -34, y: 0, z: -10 },
-  rotationY = Math.PI / 4,
-  data = DEFAULT_LORDS_SCORE
+  position: { x: number; y: number; z: number },
+  rotationY: number,
+  ground: GroundData
 ): ScoreboardInstance {
   const group = new THREE.Group();
   group.name = 'manual-scoreboard';
   group.position.set(position.x, position.y, position.z);
   group.rotation.y = rotationY;
 
-  const disposables: Array<() => void> = [];
-  const frame = createFrame(materials);
-  const { tilesGroup, flipTiles } = createScoreTiles(data, disposables);
-
-  group.add(frame, tilesGroup);
+  const frame = buildFrame(materials);
+  const tileSet = createScoreTiles(parseScoreboard(ground.scoreboard), materials);
+  group.add(frame.group, tileSet.group);
   scene.add(group);
 
-  const bodyDesc = rapier.RigidBodyDesc.fixed().setTranslation(position.x, 2.5, position.z);
-  const body = world.createRigidBody(bodyDesc);
-  const colDesc = rapier.ColliderDesc.cuboid(4.2, 2.5, 0.6);
-  world.createCollider(colDesc, body);
+  const body = world.createRigidBody(
+    rapier.RigidBodyDesc.fixed()
+      .setTranslation(position.x, position.y, position.z)
+      .setRotation(yawQuaternion(rotationY))
+  );
+  world.createCollider(
+    rapier.ColliderDesc.cuboid(4.4, FRAME_HEIGHT / 2, 0.7).setTranslation(0, FRAME_HEIGHT / 2, 0.5),
+    body
+  );
 
-  let flipAngle = 0;
-  let isFlipping = false;
+  let disposed = false;
+  document.fonts
+    .load('100px "Alfa Slab One"')
+    .then(() => {
+      if (!disposed) tileSet.redraw();
+    })
+    .catch(() => undefined);
+
+  let flipTime = -1;
+  let armed = true;
+  const flipTotal = FLIP_SECONDS + FLIP_STAGGER * Math.max(0, tileSet.tiles.length - 1);
 
   function triggerFlip(): void {
-    isFlipping = true;
-    flipAngle = 0;
+    flipTime = 0;
   }
-
-  let hasFlippedOnApproach = false;
 
   function update(state: GameState): void {
     const vehicle = state.vehicle;
-    if (vehicle && !hasFlippedOnApproach) {
-      const vPos = vehicle.currentPosition;
-      const dist = Math.hypot(vPos.x - position.x, vPos.z - position.z);
-      if (dist < 18.0) {
-        hasFlippedOnApproach = true;
+    if (vehicle) {
+      const dist = Math.hypot(
+        vehicle.currentPosition.x - position.x,
+        vehicle.currentPosition.z - position.z
+      );
+      if (armed && dist < APPROACH_DISTANCE) {
+        armed = false;
         triggerFlip();
+      } else if (!armed && dist > REARM_DISTANCE) {
+        armed = true;
       }
     }
+    if (flipTime < 0) return;
 
-    if (isFlipping) {
-      flipAngle += 0.18;
-      flipTiles.forEach((tile, i) => {
-        const offset = i * 0.15;
-        const currentTileAngle = Math.max(0, Math.min(Math.PI * 2, flipAngle - offset));
-        tile.rotation.x = Math.sin(currentTileAngle) * 0.4;
-      });
-      if (flipAngle > Math.PI * 2 + 0.5) {
-        isFlipping = false;
-        flipTiles.forEach((tile) => (tile.rotation.x = 0));
-      }
-    }
+    flipTime += state.time.dt;
+    const done = flipTime >= flipTotal;
+    tileSet.tiles.forEach((tile, i) => {
+      const p = Math.min(1, Math.max(0, (flipTime - i * FLIP_STAGGER) / FLIP_SECONDS));
+      tile.rotation.y = done ? 0 : easeInOutCubic(p) * Math.PI * 2;
+    });
+    if (done) flipTime = -1;
   }
 
   return {
@@ -174,9 +111,11 @@ export function createScoreboard(
     triggerFlip,
     update,
     dispose: () => {
+      disposed = true;
       scene.remove(group);
       world.removeRigidBody(body);
-      for (const fn of disposables) fn();
+      frame.dispose();
+      tileSet.dispose();
     }
   };
 }

@@ -13,7 +13,8 @@ export default tseslint.config(
       '**/progress/**',
       '**/.playwright-mcp/**',
       '**/assets/**',
-      '**/assets-src/**'
+      '**/assets-src/**',
+      '.tmp/**'
     ]
   },
   {

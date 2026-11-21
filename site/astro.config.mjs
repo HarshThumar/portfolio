@@ -9,6 +9,9 @@ export default defineConfig({
   trailingSlash: 'always',
   vite: {
     build: {
+      // The game is one lazy chunk loaded after the page; most of it is Rapier's wasm,
+      // which the compat build inlines as base64. Its size is policed by check-budgets
+      // (gzipped first-payload budget), so this warning would only repeat that check.
       chunkSizeWarningLimit: 6000
     }
   }
