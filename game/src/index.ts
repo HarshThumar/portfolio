@@ -19,6 +19,7 @@ import { createBoundaryDetector } from './interactions/boundary';
 import { createInfoPost } from './interactions/info-post';
 import { createSoundManager, type SoundManager } from './audio/audio';
 import { createStampBanner, type StampBanner } from './ui/stamp-banner';
+import { createProjectPanel, type ProjectPanelController } from './ui/project-panel';
 import type { GameEvents, GameInstance, GameOptions, GameState, VehicleState } from './types';
 
 export type { GameEvents, GameInstance, GameOptions, GameState, VehicleState };
@@ -70,7 +71,11 @@ function setupInteractions(
   stageInteractions: ReturnType<typeof createStageInteractions>,
   soundManager: SoundManager,
   stampBanner: StampBanner
-): { honoursBoard: HonoursBoardController; dispose: () => void } {
+): {
+  honoursBoard: HonoursBoardController;
+  projectPanel: ProjectPanelController;
+  dispose: () => void;
+} {
   const stumps = createStumps(scene, world, RAPIER, materials, () => {
     soundManager.playStumpClatter();
     soundManager.playHowzat();
@@ -82,9 +87,12 @@ function setupInteractions(
     stampBanner.show('SIX!');
   });
 
+  const projectPanel = createProjectPanel();
+
   const infoPost = createInfoPost(scene, world, RAPIER, materials, { x: 22, y: 0, z: 0 }, () => {
     soundManager.playBell();
     stampBanner.show('INFO POST');
+    projectPanel.open();
   });
 
   const honoursBoard = createHonoursBoard({ x: 0, z: -46 });
@@ -96,10 +104,12 @@ function setupInteractions(
 
   return {
     honoursBoard,
+    projectPanel,
     dispose: () => {
       stumps.dispose();
       infoPost.dispose();
       honoursBoard.destroy();
+      projectPanel.destroy();
       stageInteractions.clear();
     }
   };

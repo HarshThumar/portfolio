@@ -72,6 +72,13 @@ async function main() {
     await page.waitForTimeout(1200);
     await page.keyboard.up('KeyW');
     await page.waitForTimeout(1000);
+  } else if (action === 'panel') {
+    // Open project scorecard panel
+    await page.evaluate(() => {
+      const panel = document.getElementById('project-scorecard-panel');
+      if (panel) panel.style.transform = 'translateX(-50%) translateY(0)';
+    });
+    await page.waitForTimeout(600);
   } else {
     await page.waitForTimeout(1000);
   }
