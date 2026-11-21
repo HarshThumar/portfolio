@@ -1,7 +1,7 @@
 PERSON
 Name: Harsh Thumar
 City: Ahmedabad, India
-In his words: I build AI agents that work with real money and data.
+In his words: I build AI agents that handle real money, and they never make up a number.
 Education: B.Tech IT, CHARUSAT, 2026
 Roles:
 - Founding Engineer, CredPrism (credit fintech), since May 2026
@@ -20,7 +20,7 @@ PROJECTS, ONE PER CRICKET GROUND
 
 GROUND 0: Narendra Modi Stadium, Ahmedabad
 Project: Home Ground & About Harsh Thumar (personal project)
-Facts: I build AI agents that work with real money and data. Founding Engineer at CredPrism (credit fintech) since May 2026; before that DataSlush. Based in Ahmedabad.
+Facts: I build AI agents that handle real money, and they never make up a number. Founding Engineer at CredPrism (credit fintech) since May 2026; before that DataSlush. Based in Ahmedabad.
 Link, LinkedIn: https://www.linkedin.com/in/harsh-thumar-357037251/
 Link, Email: mailto:harshthummar1000@gmail.com
 Link, GitHub: https://github.com/HarshThumar
@@ -32,6 +32,7 @@ Facts: Models MCP's authorization flow in the Tamarin prover: 9 protocol models,
 - Protocol models: 9 (In the public repo)
 - Advisories rediscovered: 3 (Published, already-fixed MCP SDK advisories)
 Link, GitHub Repository: https://github.com/HarshThumar/mcp-auth-tamarin
+Link, Write-up (with Prince Upadhyay): https://harshthumar.github.io
 
 GROUND 2: Wankhede, Mumbai
 Project: Citation-grounded credit-appraisal platform (at CredPrism)

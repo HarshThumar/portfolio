@@ -58,7 +58,7 @@ function buildNumbers(ground: GroundData): HTMLElement {
       el(
         'div',
         { fontSize: '10px', color: 'var(--timber)', marginTop: '4px' },
-        `[[COPY: source caption]] ${num.source}`
+        `Source: ${num.source}`
       )
     );
     row.appendChild(card);
@@ -138,7 +138,7 @@ function buildHeader(ground: GroundData, titleId: string) {
       cursor: 'pointer',
       fontSize: '12px'
     },
-    '[[COPY: close button label]]'
+    'Close'
   );
   closeBtn.type = 'button';
   header.append(heading, closeBtn);
@@ -169,7 +169,7 @@ function buildFooter(ground: GroundData, onMap: () => void): HTMLElement {
   const map = el(
     'button',
     { ...buttonStyle, background: 'var(--cream)', color: 'var(--ink)' },
-    '[[COPY: map button label]]'
+    'Map'
   );
   map.type = 'button';
   map.addEventListener('click', onMap);
@@ -177,7 +177,7 @@ function buildFooter(ground: GroundData, onMap: () => void): HTMLElement {
   const next = el(
     'button',
     { ...buttonStyle, background: 'var(--ink)', color: 'var(--cream)', cursor: 'not-allowed' },
-    '[[COPY: next ground button label]]'
+    'Next ground'
   );
   next.type = 'button';
   next.disabled = true;

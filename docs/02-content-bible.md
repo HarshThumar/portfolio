@@ -1,6 +1,6 @@
 # 02 · Content bible (the only facts the site may use)
 
-**Rule for the builder:** every fact, number, name and date on the site must come from this file. Do not invent, round up, extrapolate or "improve" any number. If a section needs a fact that is not here, leave a visible `[[NEEDS FACT: ...]]` marker and stop; Harsh fills it in. Items marked **(confirm)** must be confirmed by Harsh before launch.
+**Rule for the builder:** every fact, number, name and date on the site must come from this file. Do not invent, round up, extrapolate or "improve" any number. If a section needs a fact that is not here, ask Harsh (or take it from his own public repos and record it here first) instead of guessing. Items marked **(confirm)** must be confirmed by Harsh before launch.
 
 Source: `D:\personal-workspace\linkdeln\linkedin\profile-2026-11-20.md` (built from his resume) and his decisions in [DECISIONS.md](../DECISIONS.md).
 
@@ -18,7 +18,7 @@ Source: `D:\personal-workspace\linkdeln\linkedin\profile-2026-11-20.md` (built f
   - LinkedIn: https://www.linkedin.com/in/harsh-thumar-357037251/
   - GitHub: https://github.com/HarshThumar
   - Email: harshthummar1000@gmail.com (the only email shown anywhere; never a CredPrism or DataSlush address)
-- **One-line positioning:** "I build AI agents that work with real money and data."
+- **One-line positioning:** "I build AI agents that handle real money, and they never make up a number." (Harsh asked for a new hook on 22 Nov 2026; backed by "the LLM never writes a digit" and "every claim traces back to a source cell".)
 
 ## Naming rules
 - Name **CredPrism** and **DataSlush** as employers.
@@ -40,6 +40,9 @@ Source: `D:\personal-workspace\linkdeln\linkedin\profile-2026-11-20.md` (built f
 - **9 protocol models, 376 lemma checks** run in CI. Topics: OAuth 2.1 + PKCE, audience binding, ID-JAG token exchange, UPI-style agent-payment mandates, confused deputy, token passthrough, scope step-up.
 - Each weakened variant produces an attack trace; the fixed variant verifies.
 - **Rediscovered 3 published, already-fixed MCP SDK advisories.**
+  - GHSA-qx49-fqc8-xw99 (Python SDK): a malicious MCP server could receive OAuth credentials meant for the user's real authorization server.
+  - GHSA-w4fh-qvv9-3v23 (Python SDK) and GHSA-rvq5-wwqv-78pq (TypeScript SDK): an MCP server accepted tokens issued for a different server (no audience check).
+- The 9 models (from the repo README): 01 AS selection, 02 code and audience, 03 CIMD client binding, 04 ID-JAG enterprise token exchange, 05 agent payment mandate (UPI-style), 06 audience injection, 07 confused deputy at an MCP proxy, 08 token passthrough, 09 scope step-up.
 - Started as his IETF 127 Hackathon project (remote participant, Nov 2026).
 - Existing write-up site: https://harshthumar.github.io (co-authored with **Prince Upadhyay**; credit him wherever the whitepaper is mentioned).
 
@@ -102,4 +105,4 @@ Source: `D:\personal-workspace\linkdeln\linkedin\profile-2026-11-20.md` (built f
 **Out of scope for v1** (Harsh, 20 Nov). No blog, no match reports, no MDX posts. Don't build anything for them.
 
 ## Voice
-Harsh's own voice: short, direct, casual, a bit of humour. Write like a person talking to a friend at a cricket match. All visible copy follows [06-anti-slop.md](06-anti-slop.md). Harsh signs off every piece of copy before launch.
+Harsh's own voice: short, direct, casual, a bit of humour. Write like a person talking to a friend at a cricket match. All visible copy follows [06-anti-slop.md](06-anti-slop.md). The builder writes the copy in this voice; Harsh can change any line.

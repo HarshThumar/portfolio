@@ -30,20 +30,20 @@ const tour = { grounds, start, built: BUILT_GROUNDS, base, opening };
     <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
     <meta
       name="description"
-      content={`[[COPY: meta description for ${ground.name}, written by Harsh]]`}
+      content={`${ground.name} on The Test Tour, Harsh Thumar's portfolio as a cricket world you drive round. He builds AI agents that handle real money and never make up a number.`}
     />
     <title>{title}</title>
   </head>
   <body>
     <a href={`${base}scorecard/`} class="skip-link">
-      [[COPY: skip link to the Scorecard view]]
+      Skip to the Scorecard view
     </a>
     <div id="hud" class="hud"></div>
     <div
       id="loader"
       class="loader"
       role="progressbar"
-      aria-label="[[COPY: loading label]]"
+      aria-label="Loading the ground"
       aria-valuemin="0"
       aria-valuemax="100"
       aria-valuenow="0"
@@ -78,16 +78,19 @@ const tour = { grounds, start, built: BUILT_GROUNDS, base, opening };
     <canvas
       id="tour-canvas"
       data-tour={JSON.stringify(tour)}
-      aria-label={`[[COPY: canvas label for ${ground.name}]]`}
+      aria-label={`3D view of ${ground.name}. Drive the roller with the arrow keys or WASD.`}
     ></canvas>
     <div id="load-error" class="load-error" role="alert" hidden>
-      <p>[[COPY: the 3D ground failed to load (designed error state, in the site's voice)]]</p>
-      <a href={`${base}scorecard/`}>[[COPY: link to the Scorecard view]]</a>
+      <p>
+        Rain stopped play: this ground didn't load on your device. The Scorecard view has
+        everything.
+      </p>
+      <a href={`${base}scorecard/`}>Open the Scorecard view</a>
     </div>
     <noscript>
       <div class="load-error">
-        <p>[[COPY: this ground needs JavaScript]]</p>
-        <a href={`${base}scorecard/`}>[[COPY: link to the Scorecard view]]</a>
+        <p>This ground needs JavaScript. The Scorecard view works without it.</p>
+        <a href={`${base}scorecard/`}>Open the Scorecard view</a>
       </div>
     </noscript>
 

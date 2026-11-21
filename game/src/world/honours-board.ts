@@ -15,6 +15,25 @@ const TRIGGER_RADIUS = 7;
 // Wider than the trigger so a roller idling at the edge cannot re-open the board.
 const RESET_RADIUS = 12;
 
+// From the public repo github.com/HarshThumar/mcp-auth-tamarin (README and docs/results.md),
+// recorded in docs/02. Each model takes one question about MCP authorization.
+const MODEL_NAMES = [
+  '01 · Does a credential reach only its own login server?',
+  '02 · Codes and tokens reach only the right server',
+  '03 · One client identity at many login servers',
+  '04 · Enterprise token exchange (ID-JAG)',
+  '05 · An AI agent paying under a UPI-style mandate',
+  '06 · Audience injection',
+  '07 · Confused deputy at an MCP proxy',
+  '08 · Token passthrough',
+  '09 · Scope step-up'
+];
+const ADVISORIES = [
+  'GHSA-qx49-fqc8-xw99 · Python SDK: a malicious MCP server could get credentials meant for the real login server',
+  'GHSA-w4fh-qvv9-3v23 · Python SDK: a server accepted tokens issued for a different server',
+  'GHSA-rvq5-wwqv-78pq · TypeScript SDK: the same audience bug'
+];
+
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   styles: Styles,
@@ -87,22 +106,20 @@ function buildBoard(ground: GroundData) {
   const title = el(
     'h2',
     { margin: '0', fontFamily: 'var(--font-display)', fontSize: '18px', color: 'var(--willow)' },
-    '[[COPY: honours board title]]'
+    'Honours board'
   );
   title.id = 'honours-board-title';
   head.append(
     title,
-    el('div', { fontSize: '12px', marginTop: '4px' }, '[[COPY: honours board subtitle]]')
+    el(
+      'div',
+      { fontSize: '12px', marginTop: '4px' },
+      'mcp-auth-tamarin · every model checked in CI'
+    )
   );
 
-  const models = Array.from(
-    { length: countFor(ground, '9') },
-    (_, i) => `[[NEEDS FACT: protocol model ${i + 1} name]]`
-  );
-  const advisories = Array.from(
-    { length: countFor(ground, '3') },
-    (_, i) => `[[NEEDS FACT: rediscovered advisory ${i + 1}, ID and one line]]`
-  );
+  const models = MODEL_NAMES.slice(0, countFor(ground, '9'));
+  const advisories = ADVISORIES.slice(0, countFor(ground, '3'));
 
   const closeBtn = el(
     'button',
@@ -116,7 +133,7 @@ function buildBoard(ground: GroundData) {
       fontSize: '12px',
       cursor: 'pointer'
     },
-    '[[COPY: close button label]]'
+    'Close'
   );
   closeBtn.type = 'button';
   const footer = el('div', { textAlign: 'center', marginTop: '18px' });
@@ -124,8 +141,8 @@ function buildBoard(ground: GroundData) {
 
   modal.append(
     head,
-    buildSection('[[COPY: models section heading]]', models, 'var(--willow)'),
-    buildSection('[[COPY: advisories section heading]]', advisories, 'var(--cream)'),
+    buildSection('The 9 models', models, 'var(--willow)'),
+    buildSection('Rediscovered: 3 published, already-fixed advisories', advisories, 'var(--cream)'),
     footer
   );
   return { modal, closeBtn };

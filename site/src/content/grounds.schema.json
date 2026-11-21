@@ -56,7 +56,7 @@
       },
       "panelText": {
         "type": "string",
-        "description": "Visible panel copy, written by Harsh. [[COPY]] marker until he does."
+        "description": "Visible panel copy, in Harsh's voice, using only facts from docs/02."
       },
       "numbers": {
         "type": "array",

@@ -99,7 +99,7 @@ function createHonkButton(state: GameState): () => void {
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.id = 'touch-honk';
-  btn.textContent = '[[COPY: horn button label]]';
+  btn.textContent = 'Horn';
   Object.assign(btn.style, {
     position: 'fixed',
     bottom: '24px',

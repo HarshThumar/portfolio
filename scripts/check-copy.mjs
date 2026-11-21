@@ -90,7 +90,8 @@ function checkCopy(filePath, content) {
     const emDashes = (content.match(/—/g) || []).length;
     if (emDashes > 1) report(`Too many em dashes (${emDashes} > 1) in ${filePath}`);
   }
-  if (releaseMode && MARKERS.test(content)) {
+  // The builder writes all copy now (docs/06), so a leftover marker fails every build.
+  if (MARKERS.test(content)) {
     report(`Unresolved [[COPY]] / [[NEEDS FACT]] marker in ${filePath}`);
   }
 }

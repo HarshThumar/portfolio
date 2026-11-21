@@ -74,7 +74,7 @@ function createMuteButton(isMuted: boolean, onToggle: () => void) {
     boxShadow: '2px 2px 0 var(--ink)'
   });
   const label = document.createElement('span');
-  label.textContent = '[[COPY: mute button label]]';
+  label.textContent = 'Sound';
   btn.append(buildSpeakerIcon(), label);
   btn.addEventListener('click', onToggle);
   // The page provides a #hud row so HUD buttons line up instead of overlapping.

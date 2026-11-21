@@ -13,12 +13,13 @@ export function createOpeningOverlay(params: { base: string; onPlay: () => void 
 
   const tagline = document.createElement('p');
   tagline.className = 'opening-tagline';
-  tagline.textContent = 'I build AI agents that work with real money and data.';
+  tagline.textContent =
+    'I build AI agents that handle real money, and they never make up a number.';
 
   const playBtn = document.createElement('button');
   playBtn.type = 'button';
   playBtn.className = 'opening-play-btn';
-  playBtn.textContent = '[[COPY: play button]]';
+  playBtn.textContent = 'Bowl it';
   playBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     params.onPlay();
@@ -29,7 +30,7 @@ export function createOpeningOverlay(params: { base: string; onPlay: () => void 
 
   const soundNote = document.createElement('span');
   soundNote.className = 'opening-note';
-  soundNote.textContent = '[[COPY: sound on note]]';
+  soundNote.textContent = 'Best with sound on';
 
   const sep = document.createElement('span');
   sep.className = 'opening-sep';
@@ -39,7 +40,7 @@ export function createOpeningOverlay(params: { base: string; onPlay: () => void 
   const scorecardLink = document.createElement('a');
   scorecardLink.className = 'opening-link';
   scorecardLink.href = `${params.base}scorecard/`;
-  scorecardLink.textContent = '[[COPY: link to the Scorecard view]]';
+  scorecardLink.textContent = 'Prefer reading? Scorecard view';
 
   footer.append(soundNote, sep, scorecardLink);
   container.append(tagline, playBtn, footer);

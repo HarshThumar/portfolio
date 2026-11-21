@@ -58,7 +58,7 @@ export function createSkyButton(onToggle: () => void): SkyButton {
 
   const icon = createIcon();
   const label = document.createElement('span');
-  label.textContent = '[[COPY: sky toggle label]]';
+  label.textContent = 'Day / Night';
   btn.append(icon.svg, label);
   btn.addEventListener('click', onToggle);
   // The page provides a #hud row so HUD buttons line up instead of overlapping.

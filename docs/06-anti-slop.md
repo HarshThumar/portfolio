@@ -39,7 +39,7 @@
 | Generic headlines ("Building the future of AI") | A headline must contain a concrete thing: a number, a named tool, an outcome. Read it aloud: would Harsh say it to a friend? |
 | Vague claims ("experts say", "industry-leading") | Name the source or cut it. |
 | Hedging and filler | Short sentences. Take a position. |
-| Copy written by the builder | **The builder never writes final copy.** It uses text from the content bible and `grounds.json`. Where copy is missing, insert `[[COPY: what's needed]]`; Harsh writes it. |
+| Copy that sounds like nobody | **The builder writes the final copy** (Harsh changed this rule on 22 Nov 2026): in Harsh's voice (see 02, "Voice"), using only facts from the content bible, and passing every rule on this page. No `[[COPY]]` markers are left on the site. Harsh can rewrite any line. |
 
 ## 3. 3D and WebGL
 

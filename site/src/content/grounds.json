@@ -9,8 +9,8 @@
     "landmark": "The huge bowl and its ring of floodlights",
     "tagline": "The world's biggest cricket stadium, in my own city.",
     "scoreboard": "HOME · AHMEDABAD",
-    "facts": "I build AI agents that work with real money and data. Founding Engineer at CredPrism (credit fintech) since May 2026; before that DataSlush. Based in Ahmedabad.",
-    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: I build AI agents that work with real money and data. Founding Engineer at CredPrism, previously at DataSlush. Based in Ahmedabad.]]",
+    "facts": "I build AI agents that handle real money, and they never make up a number. Founding Engineer at CredPrism (credit fintech) since May 2026; before that DataSlush. Based in Ahmedabad.",
+    "panelText": "I build AI agents that handle real money, and they never make up a number. Right now I'm a Founding Engineer at CredPrism, a credit fintech, and before that I was at DataSlush. I'm based in Ahmedabad, so this one is my home ground.",
     "numbers": [],
     "links": [
       {
@@ -38,7 +38,7 @@
     "tagline": "Lord's keeps the Laws of Cricket. This project checks the rules AI agents follow.",
     "scoreboard": "CHECKS 376 · MODELS 9 · REDISCOVERED 3",
     "facts": "Models MCP's authorization flow in the Tamarin prover: 9 protocol models, 376 lemma checks run in CI. Each weakened variant produces an attack trace; the fixed variant verifies. Rediscovered 3 published, already-fixed MCP SDK advisories. Started as his IETF 127 Hackathon project (remote participant). Write-up co-authored with Prince Upadhyay.",
-    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: Models MCP authorization flow in the Tamarin prover with 9 protocol models and 376 lemma checks run in CI. Rediscovered 3 published, already-fixed MCP SDK advisories. Started as IETF 127 Hackathon project (remote participant). Co-authored with Prince Upadhyay.]]",
+    "panelText": "Lord's keeps the Laws of Cricket, so this is where my rules for AI agents live. I modelled MCP's authorization flow in the Tamarin prover: 9 protocol models and 376 lemma checks, all run in CI. Take one check away and the model finds the attack, and along the way it rediscovered 3 published, already-fixed MCP SDK advisories. It started as my IETF 127 Hackathon project (remote participant), and the write-up is co-authored with Prince Upadhyay.",
     "numbers": [
       {
         "label": "Lemma checks",
@@ -63,7 +63,7 @@
       },
       {
         "label": "Write-up (with Prince Upadhyay)",
-        "url": "[[NEEDS FACT: final write-up URL once O7 is decided; today https://harshthumar.github.io]]"
+        "url": "https://harshthumar.github.io"
       }
     ]
   },
@@ -78,7 +78,7 @@
     "tagline": "Mumbai is India's money capital. This is software for lenders.",
     "scoreboard": "CHECKS 30+ · TESTS 580+ · HIGHLIGHTS 3–5 s",
     "facts": "Credit-underwriting software for Indian NBFCs at CredPrism. Gemini 2.5 Flash on Vertex AI checks a borrower's bank statement, GST and bureau data against the lender's own credit-policy PDF. 30+ deterministic forensic checks produce findings the LLM must cite, so every claim in the credit memo traces back to a source cell. PDF highlight lookups take 3–5 s instead of 20–30 s. 580+ tests. A human always makes the credit decision.",
-    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: Credit-underwriting software for Indian NBFCs at CredPrism. Gemini 2.5 Flash on Vertex AI checks bank statement, GST, and bureau data against lender credit-policy PDFs. 30+ deterministic forensic checks ensure every claim in the credit memo traces back to a source cell. A human always makes the credit decision.]]",
+    "panelText": "Credit-underwriting software for Indian NBFCs, built at CredPrism. Gemini 2.5 Flash checks a borrower's bank statement, GST and bureau data against the lender's own credit policy, and 30+ deterministic forensic checks back every finding, so every claim in the credit memo traces back to a source cell. A human always makes the credit decision.",
     "numbers": [
       {
         "label": "Deterministic forensic checks",
@@ -114,7 +114,7 @@
     "tagline": "A fort wall guards the ground. Here code guards every number.",
     "scoreboard": "CAUGHT 100% · FALSE ALARMS 0 · LANGUAGES 4",
     "facts": "Creates posts and client messages for mutual-fund distributors in 4 languages and 7 formats. The LLM never writes a digit: it emits fact placeholders, and code rejects any stray number, including Devanagari and Gujarati digits. LLM compliance reviewer: 100% of violations caught, 0 false positives on a 62-case test; 16/18 on an adversarial red-team set. About ₹2.9 per draft, tracked by a spend ledger with a kill switch.",
-    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: Produces posts and client communications for mutual-fund distributors at CredPrism in 4 languages and 7 formats. The LLM never writes a digit; code rejects stray numbers across Latin, Devanagari, and Gujarati scripts. Spend ledger with kill switch maintains roughly ₹2.9 per draft.]]",
+    "panelText": "A content engine at CredPrism that writes posts and client messages for mutual-fund distributors, in 4 languages and 7 formats. The LLM never writes a digit: it leaves placeholders for the facts, and code rejects any stray number, Devanagari and Gujarati digits included. It runs at about ₹2.9 per draft, with a kill switch on the spend.",
     "numbers": [
       {
         "label": "Violations caught",
@@ -160,7 +160,7 @@
     "tagline": "The Oval has giant storage tanks. This project stores 8.6M rows.",
     "scoreboard": "NAV ROWS 8.6M · HOLDINGS 7.7M · GATES 7",
     "facts": "55 fund houses, 7.7M holdings, 8.6M NAV rows, 3.8M deal rows, from 63.8K source files. 7 quality gates and an atomic publish with rollback.",
-    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: Mutual-fund data lake at CredPrism covering 55 fund houses, 7.7M holdings, 8.6M NAV rows, and 3.8M deal rows from 63.8K source files. Built with 7 quality gates and atomic publish with automated rollback.]]",
+    "panelText": "A mutual-fund data lake at CredPrism: 55 fund houses, 7.7M holdings, 8.6M NAV rows and 3.8M deal rows, built from 63.8K source files. Nothing goes live until it clears 7 quality gates, and every publish is atomic, so a bad one rolls back.",
     "numbers": [
       {
         "label": "Fund houses",
@@ -206,7 +206,7 @@
     "tagline": "Desert Storm: this system survived a storm of users.",
     "scoreboard": "THROUGHPUT 9x · p95 27.5 s → 1.5 s",
     "facts": "Load-tested with k6; the database collapsed at ~50 users. Fixed it: 9x throughput, p95 latency from 27.5 s to 1.5 s.",
-    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: System load-tested with k6 at CredPrism. When database collapsed at ~50 users, resolved bottlenecks to achieve 9x throughput and cut p95 latency from 27.5 s down to 1.5 s.]]",
+    "panelText": "At CredPrism I load-tested our system with k6, and the database fell over at about 50 users. Then I fixed it: 9x the throughput, and p95 latency down from 27.5 s to 1.5 s.",
     "numbers": [
       {
         "label": "Throughput gain",
@@ -242,7 +242,7 @@
     "tagline": "The loudest crowd in cricket, for an auction full of drama.",
     "scoreboard": "LOTS 1,019 · TESTS 106 · IN DEVELOPMENT",
     "facts": "In development. A rule-faithful auction engine that replays all 1,019 lots of the 2022–26 IPL auctions exactly (0 rule violations, 106 tests), plus a 5,405-row bid-decision dataset. 10 AI franchise agents, in development.",
-    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: Project status: in development. Rule-faithful auction engine replaying all 1,019 lots of 2022–26 IPL auctions exactly (0 rule violations across 106 tests) over a 5,405-row bid-decision dataset. 10 AI franchise agents currently in development.]]",
+    "panelText": "IPL Auction Arena, in development. The auction engine already replays all 1,019 lots of the 2022–26 IPL auctions exactly, with 0 rule violations across 106 tests, on top of a 5,405-row bid-decision dataset. Next up: 10 AI franchise agents, in development, that will bid against each other.",
     "numbers": [
       {
         "label": "Lots replayed",
@@ -283,7 +283,7 @@
     "tagline": "A summit reached at zero cost.",
     "scoreboard": "SCORE 18/20 · TOOLS 13 · COST $0",
     "facts": "LangGraph ReAct agent: 18/20 (90%) on the Hugging Face Agents Course GAIA Level 1 set, at $0 model cost (gpt-oss-120b on Cloudflare Workers AI). 13 tools including search, a Python sandbox, vision, Whisper and chess via Stockfish. Repairs malformed tool calls; majority vote over 3 runs.",
-    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: LangGraph ReAct agent scoring 18/20 (90%) on Hugging Face Agents Course GAIA Level 1 set at $0 model cost using gpt-oss-120b on Cloudflare Workers AI. Equipped with 13 tools, runtime tool call repair, and majority vote over 3 runs.]]",
+    "panelText": "An agent that scored 18/20 (90%) on the Hugging Face Agents Course GAIA Level 1 set, at $0 model cost. It's a LangGraph ReAct agent on gpt-oss-120b via Cloudflare Workers AI, with 13 tools, from web search to chess via Stockfish. It repairs its own malformed tool calls and takes a majority vote over 3 runs.",
     "numbers": [
       {
         "label": "GAIA Level 1 score",
@@ -319,7 +319,7 @@
     "tagline": "The biggest crowd to judge. Agents that review every applicant.",
     "scoreboard": "REVIEW TIME ABOUT −70% · PROGRAMS 3",
     "facts": "CrewAI agents score each applicant per criterion with a written justification. RAG over PDF/DOCX submissions (ChromaDB), async jobs on Cloud Run + Cloud Tasks, LangSmith tracing. Cut manual review time by about 70% across 3 program types.",
-    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: CrewAI multi-agent application evaluator at DataSlush scoring grant applications per criterion with written justifications via RAG over PDF/DOCX submissions (ChromaDB). Runs async jobs on Cloud Run and Cloud Tasks with LangSmith tracing.]]",
+    "panelText": "Agent-E, built at DataSlush: CrewAI agents that score NGO applications criterion by criterion and write down why. It reads PDF and DOCX submissions through RAG over ChromaDB and runs as async jobs on Cloud Run and Cloud Tasks. It cut manual review time by about 70% across 3 program types.",
     "numbers": [
       {
         "label": "Manual review time cut",
@@ -345,7 +345,7 @@
     "tagline": "The ground nearest the mountains; software running on a box at the edge.",
     "scoreboard": "BACKEND · FRONTEND · OVERLAY · DEPLOYED",
     "facts": "Team project: an on-premise edge box that records IP cameras and detects deliveries live. Harsh's part: the backend, the frontend, the live broadcast overlay, and the deployment.",
-    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: On-premise edge recording and delivery detection system at DataSlush. Built the backend, frontend, live broadcast overlay, and edge box deployment.]]",
+    "panelText": "A live cricket product at DataSlush: an on-premise edge box that records IP cameras and detects deliveries as they happen. It was a team build. My part was the backend, the frontend, the live broadcast overlay and the deployment.",
     "numbers": [],
     "links": []
   }

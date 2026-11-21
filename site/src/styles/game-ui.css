@@ -177,7 +177,8 @@ body.opening .hud {
 }
 
 .opening-tagline {
-  max-width: 34ch;
+  max-width: 40ch;
+  text-wrap: balance;
   font-size: clamp(16px, 2.2vw, 20px);
   color: var(--ink);
   /* Straight on the grey sky, with a soft cream halo so it stays readable over cloud. */

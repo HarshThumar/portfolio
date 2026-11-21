@@ -76,8 +76,8 @@ export function createHeadStumpsGeometries(): HeadStumpsGeometries {
   const bail = new THREE.CapsuleGeometry(0.025, 0.22, 4, 8);
   const smallBall = new THREE.SphereGeometry(0.42, 16, 16);
   // The seam: a low leather ridge with a strip of stitching either side of it, like a real ball.
-  const smallBallSeam = new THREE.TorusGeometry(0.42, 0.018, 6, 32);
-  const smallBallStitch = new THREE.TorusGeometry(0.418, 0.011, 6, 32);
+  const smallBallSeam = new THREE.TorusGeometry(0.42, 0.026, 6, 32);
+  const smallBallStitch = new THREE.TorusGeometry(0.416, 0.014, 6, 32);
 
   return {
     helmetShell,
@@ -189,7 +189,7 @@ export function buildSmallBallObject(
   const ridge = new THREE.Mesh(geo.smallBallSeam, mat.leather);
   ridge.rotation.x = Math.PI / 2;
   group.add(ridge);
-  for (const y of [-0.055, 0.055]) {
+  for (const y of [-0.075, 0.075]) {
     const strip = new THREE.Mesh(geo.smallBallStitch, mat.cream);
     strip.rotation.x = Math.PI / 2;
     strip.position.y = y;

@@ -5,7 +5,7 @@ import * as THREE from 'three/webgpu';
 
 // Three rows each side of the ridge, packed close so each side reads as one strip of stitching
 // with the dark ridge clearly between the two strips.
-const ROW_HEIGHTS = [-0.34, -0.26, -0.18, 0.18, 0.26, 0.34];
+const ROW_HEIGHTS = [-0.46, -0.36, -0.26, 0.26, 0.36, 0.46];
 const PER_ROW = 130;
 const MAIN_COUNT = ROW_HEIGHTS.length * PER_ROW;
 
@@ -51,11 +51,13 @@ export function createBallSeams(radius: number): BallSeams {
   // line in the leather, so no thread and only a shade darker than the leather.
   const lineMat = new THREE.MeshStandardMaterial({ color: 0x861b14, roughness: 0.55 });
 
-  const ridgeGeo = new THREE.TorusGeometry(radius - 0.01, 0.1, 10, 160);
+  // A broad, flattish ridge: stretched up and down so the seam reads wide from a distance.
+  const ridgeGeo = new THREE.TorusGeometry(radius - 0.01, 0.11, 10, 160);
   ridgeGeo.rotateX(Math.PI / 2);
+  ridgeGeo.scale(1, 1.7, 1);
   const ridge = new THREE.Mesh(ridgeGeo, ridgeMat);
 
-  const stitchGeo = new THREE.CapsuleGeometry(0.024, 0.06, 3, 6);
+  const stitchGeo = new THREE.CapsuleGeometry(0.03, 0.08, 3, 6);
   const main = new THREE.InstancedMesh(stitchGeo, threadMat, MAIN_COUNT);
   placeMainStitches(main, radius);
   main.count = 0;

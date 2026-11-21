@@ -10,7 +10,7 @@ A task or milestone is "done" only when every gate that applies passes. `npm run
 | Format | Prettier `--check` | Any unformatted file |
 | Dead code | knip | Unused files, exports or dependencies |
 | Duplication | jscpd | > 3% duplicated |
-| Banned words | `scripts/check-copy.mjs` | Any word from the 06 banned list in `.astro`, `.json` content, alt text or meta; more than one em dash per page; `TODO`, `FIXME`, `lorem`, `placeholder`; any `[[COPY` or `[[NEEDS FACT` marker (on the release branch only) |
+| Banned words | `scripts/check-copy.mjs` | Any word from the 06 banned list in `.astro`, `.json` content, alt text or meta; more than one em dash per page; `TODO`, `FIXME`, `lorem`, `placeholder`; any `[[COPY` or `[[NEEDS FACT` marker (every build) |
 | Banned fonts/colours | `scripts/check-style.mjs` | A banned font family, `indigo`/`violet`/`purple` names, `backdrop-filter`, or a colour not in `tokens.css` |
 | No forbidden names | `scripts/check-copy.mjs` | Any name from the local `.forbidden-names` file (or the `FORBIDDEN_NAMES` CI secret) anywhere in the repo (code, content, comments; commit messages via the commit-msg hook); "found a vulnerability"; "IETF contributor" |
 | Facts | `scripts/check-facts.mjs` | A number in `grounds.json` that isn't in the content bible's list of allowed numbers |

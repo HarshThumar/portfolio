@@ -30,7 +30,7 @@ Changed 22 Nov 2026 (Harsh): overcast Test-match sky, no stadium during the form
 | +3–3.8 s | The cluster becomes **four red leather quarters** that close together into one Test ball. | — |
 | +3.8–4.6 s | The **seam stitches itself**: the raised main seam with six rows of stitching, then the two quarter seams. | — |
 | +4.6–5.6 s | The ball turns to show a **gold-foil maker's stamp**: "HT" with small curved text around it (HARSH THUMAR · TEST); a light sweep runs across the foil. Our own design, never a real maker's logo. | — |
-| ready | Under the ball: the one-line positioning from 02 and one button **[[COPY: play button]]**. Small: sound on · Scorecard view. | — |
+| ready | Under the ball: the one-line positioning from 02 and one button **Bowl it**. Small: sound on · Scorecard view. | — |
 | click | The ball is **bowled down**: it drops through the cloud layer, the camera follows, the Ahmedabad stadium appears below, the ball pitches on the square and bounces away like a six, and the visitor lands on the roller in the hub. ~3 s. | whoosh, leather-on-turf thud, crowd roar |
 
 Rules:
@@ -43,7 +43,7 @@ Rules:
 | 0 s | Cream screen. A small loading indicator: the **roller rolling along a crease line**, showing real progress. | none |
 | loaded | Cricket kit floats in from every side, in the miniature style: bats, pads, gloves, a helmet, stumps and bails, a cap, a few balls. | — |
 | +0.5–3 s | The pieces fly together and **snap into one giant red leather ball**, seam last. The seam stitches itself closed. | — |
-| +3 s | The ball turns slowly. Under it: **HARSH THUMAR**, the one-line positioning from 02, and one button: **[[COPY: play button]]**. Small: sound on · Scorecard view. | — |
+| +3 s | The ball turns slowly. Under it: **HARSH THUMAR**, the one-line positioning from 02, and one button: **Bowl it**. Small: sound on · Scorecard view. | — |
 | click | The ball is **bowled**: it drops and pitches into the centre of the Ahmedabad pitch, the camera follows it down, and the visitor lands in the hub, sitting on the roller. ~2.5 s. | whoosh, leather-on-turf thud, crowd roar |
 
 Rules:
