@@ -5,6 +5,7 @@ import {
   mix,
   mrt,
   normalView,
+  output,
   pass,
   renderOutput,
   saturation,
@@ -38,7 +39,8 @@ interface ChainResult {
 function buildTiltShiftMask(): Node<'float'> {
   const y = uv().y;
   const dist = y.sub(0.5).abs();
-  return smoothstep(float(0.225), float(0.45), dist);
+  // Sharp across the middle 70% so plaques and the roller stay crisp; only the far edges soften.
+  return smoothstep(float(0.35), float(0.5), dist).mul(0.85);
 }
 
 function buildTiltShift(colorNode: Node<'vec4'>, blurredNode: Node<'vec4'>): Node<'vec4'> {
@@ -58,7 +60,7 @@ function buildWarmGrade(colorNode: Node<'vec4'>): Node<'vec4'> {
 function buildVignette(colorNode: Node<'vec4'>): Node<'vec4'> {
   const uvC = uv().sub(0.5).mul(2.0);
   const dist = uvC.length().clamp(0.0, 1.0);
-  const vig = float(1.0).sub(dist.mul(float(0.25)));
+  const vig = float(1.0).sub(dist.mul(float(0.16)));
   return vec4(colorNode.rgb.mul(vig), colorNode.a);
 }
 
@@ -69,8 +71,10 @@ function buildHighQualityChain(
 ): ChainResult {
   const scenePass = pass(scene, camera);
   scenePass.setMRT(
+    // `output` is the material's own colour; pointing it at this pass's texture would read
+    // the pass from itself and render nothing.
     mrt({
-      output: scenePass.getTextureNode('output'),
+      output,
       normal: normalView
     })
   );
@@ -81,11 +85,12 @@ function buildHighQualityChain(
 
   const aoPass = ao(sceneDepth, sceneNormal, camera);
   aoPass.radius.value = 1.5;
-  aoPass.scale.value = 0.6;
+  aoPass.scale.value = 0.45;
   aoPass.samples.value = 12;
 
   const aoTex = aoPass.getTextureNode();
-  const aoColor = vec4(sceneColor.rgb.mul(aoTex.r), sceneColor.a);
+  // Partial strength: creases darken, open grass keeps its sunlight.
+  const aoColor = vec4(sceneColor.rgb.mul(mix(float(1), aoTex.r, 0.7)), sceneColor.a);
 
   const bloomNode = bloom(aoColor, 0.4, 0.3, 0.85);
   const withBloom = vec4(aoColor.rgb.add(bloomNode.rgb), aoColor.a);
