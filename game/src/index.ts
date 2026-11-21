@@ -1,8 +1,9 @@
 import * as THREE from 'three';
-import { WebGPURenderer } from 'three/webgpu';
+import type { WebGPURenderer } from 'three/webgpu';
 import RAPIER from '@dimforge/rapier3d-compat';
 import { TypedEmitter } from './events/emitter';
 import { createDebugPanel } from './debug/debug-panel';
+import { createPhysicsWorld, createRenderer } from './loop/engine-setup';
 import { createStageInputs } from './loop/stage-inputs';
 import { createStageInteractions } from './loop/stage-interactions';
 import { createSharedMaterials } from './world/palette';
@@ -11,6 +12,7 @@ import { createLordsPavilion } from './world/lords-pavilion';
 import { createHonoursBoard, type HonoursBoardController } from './world/honours-board';
 import { createScoreboard } from './world/scoreboard';
 import { createCrowd } from './world/crowd';
+import { createSkySystem } from './world/sky';
 import { createInitialState, startMainLoop, type GameLoop } from './loop/game-state';
 import { createRoller } from './vehicle/roller';
 import { setupTouchAndClickControls } from './vehicle/touch-controls';
@@ -24,44 +26,19 @@ import type { GameEvents, GameInstance, GameOptions, GameState, VehicleState } f
 
 export type { GameEvents, GameInstance, GameOptions, GameState, VehicleState };
 
-function setupLighting(scene: THREE.Scene): void {
-  scene.background = new THREE.Color(0xf3ead3); // --cream
-
-  const ambientLight = new THREE.AmbientLight(0xfff6da, 1.4); // --flood
-  scene.add(ambientLight);
-
-  const dirLight = new THREE.DirectionalLight(0xffffff, 1.6);
-  dirLight.position.set(15, 30, 20);
-  dirLight.castShadow = true;
-  scene.add(dirLight);
-}
-
-function createPhysicsWorld(rapier: typeof RAPIER): {
-  world: RAPIER.World;
-  bodies: Map<string, RAPIER.RigidBody>;
+function setupLighting(scene: THREE.Scene): {
+  sun: THREE.DirectionalLight;
+  ambient: THREE.AmbientLight;
 } {
-  const gravity = { x: 0.0, y: -9.81, z: 0.0 };
-  const world = new rapier.World(gravity);
-  const bodies = new Map<string, RAPIER.RigidBody>();
-  return { world, bodies };
-}
+  scene.background = new THREE.Color(0xf3ead3); // --cream
+  const ambient = new THREE.AmbientLight(0xfff6da, 1.4);
+  scene.add(ambient);
 
-async function createRenderer(canvas: HTMLCanvasElement): Promise<{
-  renderer: WebGPURenderer;
-  backend: string;
-}> {
-  const renderer = new WebGPURenderer({
-    canvas,
-    antialias: true,
-    powerPreference: 'high-performance'
-  });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  await renderer.init();
-
-  const isWebGPU = Boolean((renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend);
-  const backend = isWebGPU ? 'WebGPU' : 'WebGL2';
-  return { renderer, backend };
+  const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+  sun.position.set(15, 30, 20);
+  sun.castShadow = true;
+  scene.add(sun);
+  return { sun, ambient };
 }
 
 function setupInteractions(
@@ -145,6 +122,7 @@ function createGameDisposer(params: {
   pavilion: { dispose: () => void };
   scoreboard: { dispose: () => void };
   crowd: { dispose: () => void };
+  sky: { dispose: () => void };
   vehicle: VehicleState;
   materials: { dispose: () => void };
   renderer: WebGPURenderer;
@@ -164,6 +142,7 @@ function createGameDisposer(params: {
     params.pavilion.dispose();
     params.scoreboard.dispose();
     params.crowd.dispose();
+    params.sky.dispose();
     params.vehicle.model.dispose();
     params.materials.dispose();
     params.renderer.dispose();
@@ -213,7 +192,8 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
   await RAPIER.init();
   const { world, bodies } = createPhysicsWorld(RAPIER);
   const scene = new THREE.Scene();
-  setupLighting(scene);
+  const { sun, ambient } = setupLighting(scene);
+  const sky = createSkySystem(scene, sun, ambient);
 
   const materials = createSharedMaterials();
   const { groundBase, pavilion, scoreboard, vehicle, crowd } = createWorldEntities(
@@ -264,7 +244,7 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
     stageInteractions,
     updateDebugPanel: debugController.update,
     soundManager,
-    extraUpdatables: [scoreboard.update, crowd.update]
+    extraUpdatables: [scoreboard.update, crowd.update, sky.update]
   });
   const cleanupResize = setupResizeHandler(camera, renderer, events);
 
@@ -281,6 +261,7 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
     pavilion,
     scoreboard,
     crowd,
+    sky,
     vehicle,
     materials,
     renderer,

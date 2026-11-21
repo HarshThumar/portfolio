@@ -89,6 +89,7 @@ export interface Stage {
 export interface GameOptions {
   canvas: HTMLCanvasElement;
   debug?: boolean;
+  groundSlug?: string;
 }
 
 export interface GameInstance {

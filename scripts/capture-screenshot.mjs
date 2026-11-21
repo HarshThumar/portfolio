@@ -93,6 +93,17 @@ async function main() {
     await page.waitForTimeout(1000);
     await page.keyboard.up('KeyW');
     await page.waitForTimeout(1000);
+  } else if (action === 'night') {
+    // Toggle sky mode to NIGHT with floodlights on
+    await page.waitForSelector('#hud-sky-btn', { state: 'visible' });
+    await page.click('#hud-sky-btn');
+    await page.waitForTimeout(400);
+    const text = await page.textContent('#hud-sky-btn');
+    if (!text?.includes('NIGHT')) {
+      await page.click('#hud-sky-btn');
+      await page.waitForTimeout(400);
+    }
+    await page.waitForTimeout(1000);
   } else {
     await page.waitForTimeout(1000);
   }

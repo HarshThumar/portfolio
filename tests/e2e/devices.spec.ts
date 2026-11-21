@@ -24,3 +24,23 @@ test('home page fits the screen', async ({ page }, testInfo) => {
   await page.screenshot({ path: `progress/devices/${file}.png` });
   await page.close();
 });
+
+test("Lord's ground page loads directly and fits the screen", async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+
+  await page.goto('/ground/lords/');
+  const canvas = page.locator('#tour-canvas');
+  await expect(canvas).toBeVisible();
+
+  const viewport = page.viewportSize();
+  const box = await canvas.boundingBox();
+  expect(box?.width).toBe(viewport?.width);
+
+  const scrollsSideways = await page.evaluate(
+    () => document.documentElement.scrollWidth > window.innerWidth
+  );
+  expect(scrollsSideways).toBe(false);
+  expect(errors).toEqual([]);
+  await page.close();
+});
