@@ -1,0 +1,103 @@
+PERSON
+Name: Harsh Thumar
+City: Ahmedabad, India
+In his words: I build AI agents that work with real money and data.
+Education: B.Tech IT, CHARUSAT, 2026
+Roles:
+- Founding Engineer, CredPrism (credit fintech), since May 2026
+- Associate AI Data Engineer, DataSlush, May – Jun 2026
+- AI Data Engineer Intern, DataSlush, Aug 2025 – Apr 2026
+- Web Developer, Peakenza Software Services, May – Jul 2024
+- Placement Coordinator, CHARUSAT placement cell, Dec 2024 – Jun 2026
+Interests: Multi-sport fan (cricket, basketball), reads novels
+Community: OWASP GenAI Agentic Security Initiative participant; follows the IETF OAuth and WIMSE working groups.
+Links:
+- LinkedIn: https://www.linkedin.com/in/harsh-thumar-357037251/
+- GitHub: https://github.com/HarshThumar
+- Email: mailto:harshthummar1000@gmail.com
+
+PROJECTS, ONE PER CRICKET GROUND
+
+GROUND 0: Narendra Modi Stadium, Ahmedabad
+Project: Home Ground & About Harsh Thumar (personal project)
+Facts: I build AI agents that work with real money and data. Founding Engineer at CredPrism (credit fintech) since May 2026; before that DataSlush. Based in Ahmedabad.
+Link, LinkedIn: https://www.linkedin.com/in/harsh-thumar-357037251/
+Link, Email: mailto:harshthummar1000@gmail.com
+Link, GitHub: https://github.com/HarshThumar
+
+GROUND 1: Lord's, London
+Project: mcp-auth-tamarin: formal verification of MCP authorization (personal project)
+Facts: Models MCP's authorization flow in the Tamarin prover: 9 protocol models, 376 lemma checks run in CI. Each weakened variant produces an attack trace; the fixed variant verifies. Rediscovered 3 published, already-fixed MCP SDK advisories. Started as his IETF 127 Hackathon project (remote participant). Write-up co-authored with Prince Upadhyay.
+- Lemma checks: 376 (CI test run)
+- Protocol models: 9 (Tamarin repository models)
+- Advisories rediscovered: 3 (Published, already-fixed MCP SDK advisories)
+Link, GitHub Repository: https://github.com/HarshThumar/mcp-auth-tamarin
+
+GROUND 2: Wankhede, Mumbai
+Project: Citation-grounded credit-appraisal platform (at CredPrism)
+Facts: Credit-underwriting software for Indian NBFCs at CredPrism. Gemini 2.5 Flash on Vertex AI checks a borrower's bank statement, GST and bureau data against the lender's own credit-policy PDF. 30+ deterministic forensic checks produce findings the LLM must cite, so every claim in the credit memo traces back to a source cell. PDF highlight lookups take 3–5 s instead of 20–30 s. 580+ tests. A human always makes the credit decision.
+- Deterministic forensic checks: 30+ (Rule engine verification)
+- Automated tests: 580+ (Test suite with LLM PR-review in CI)
+- PDF highlight lookups: 3–5 s (Chunk-index grounding (reduced from 20–30 s))
+- Guided income playbooks: 46 (CAM Excel workbook conversions with golden tests)
+
+GROUND 3: Galle, Sri Lanka
+Project: Compliant multilingual GenAI content engine (at CredPrism)
+Facts: Creates posts and client messages for mutual-fund distributors in 4 languages and 7 formats. The LLM never writes a digit: it emits fact placeholders, and code rejects any stray number, including Devanagari and Gujarati digits. LLM compliance reviewer: 100% of violations caught, 0 false positives on a 62-case test; 16/18 on an adversarial red-team set. About ₹2.9 per draft, tracked by a spend ledger with a kill switch.
+- Violations caught: 100% (62-case test suite)
+- False positives: 0 (62-case test suite)
+- Adversarial red-team catch rate: 16/18 (Red-team test set)
+- Languages: 4 (Multilingual generation)
+- Formats: 7 (Supported output formats)
+- Cost per draft: ₹2.9 (Internal spend ledger)
+
+GROUND 4: The Oval, London
+Project: Mutual-fund data lake (at CredPrism)
+Facts: 55 fund houses, 7.7M holdings, 8.6M NAV rows, 3.8M deal rows, from 63.8K source files. 7 quality gates and an atomic publish with rollback.
+- Fund houses: 55 (Covered fund houses)
+- Holdings rows: 7.7M (Data lake storage)
+- NAV rows: 8.6M (Data lake storage)
+- Deal rows: 3.8M (Data lake storage)
+- Source files: 63.8K (Ingested source files)
+- Quality gates: 7 (Publish verification gates)
+
+GROUND 5: Sharjah
+Project: Load test and fix (at CredPrism)
+Facts: Load-tested with k6; the database collapsed at ~50 users. Fixed it: 9x throughput, p95 latency from 27.5 s to 1.5 s.
+- Throughput gain: 9x (k6 benchmark comparison)
+- Failure threshold before fix: ~50 (Initial k6 load test)
+- p95 latency before fix: 27.5 s (k6 load test run)
+- p95 latency after fix: 1.5 s (Optimized benchmark run)
+
+GROUND 6: Eden Gardens, Kolkata
+Project: IPL Auction Arena (in development) (personal project)
+Facts: In development. A rule-faithful auction engine that replays all 1,019 lots of the 2022–26 IPL auctions exactly (0 rule violations, 106 tests), plus a 5,405-row bid-decision dataset. 10 AI franchise agents, in development.
+- Lots replayed: 1,019 (2022–26 IPL auctions replay)
+- Engine test suite: 106 (Engine tests, 0 rule violations)
+- Bid-decision rows: 5,405 (Historical auction dataset)
+- Franchise agents: 10 (AI franchise agents in development)
+Link, GitHub Repository: https://github.com/HarshThumar/ipl-auction-arena
+
+GROUND 7: Newlands, Cape Town
+Project: Zero-cost GAIA agent (personal project)
+Facts: LangGraph ReAct agent: 18/20 (90%) on the Hugging Face Agents Course GAIA Level 1 set, at $0 model cost (gpt-oss-120b on Cloudflare Workers AI). 13 tools including search, a Python sandbox, vision, Whisper and chess via Stockfish. Repairs malformed tool calls; majority vote over 3 runs.
+- GAIA Level 1 score: 18/20 (Hugging Face Agents Course GAIA Level 1 benchmark)
+- Model API cost: $0 (gpt-oss-120b on Cloudflare Workers AI)
+- Integrated tools: 13 (Search, Python sandbox, vision, Whisper, Stockfish chess)
+Link, Hugging Face Space: https://huggingface.co/spaces/Harsh5764/zero-cost-gaia-agent
+
+GROUND 8: MCG, Melbourne
+Project: Agent-E: multi-agent evaluator for NGO applications (at DataSlush)
+Facts: CrewAI agents score each applicant per criterion with a written justification. RAG over PDF/DOCX submissions (ChromaDB), async jobs on Cloud Run + Cloud Tasks, LangSmith tracing. Cut manual review time by about 70% across 3 program types.
+- Manual review time cut: ~70% (About 70%, across 3 program types)
+- Program types evaluated: 3 (Supported grant programs)
+
+GROUND 9: Dharamsala
+Project: Live cricket product: backend, frontend, broadcast overlay, deployment (at DataSlush)
+Facts: Team project: an on-premise edge box that records IP cameras and detects deliveries live. Harsh's part: the backend, the frontend, the live broadcast overlay, and the deployment.
+
+SMALLER WORK
+- Document AI for project finance (at DataSlush): Docling extraction with bounding boxes, LlamaIndex + pgvector per deal, cross-document conflict detection, 10+ generated document types with citations.
+- Conversational AI suite (at DataSlush): Web chatbot, phone/web callbot in 3 languages, meeting bot that answers live in under a second.
+- Shopify to BigQuery pipeline (at DataSlush): Airbyte, Dataform, 15+ Looker Studio dashboards.
+- GroundBook: Sports-venue booking on Next.js, Supabase and Razorpay, with Gemini natural-language search. A row-locked Postgres function prevents double bookings. Live: https://booking-sable-iota.vercel.app

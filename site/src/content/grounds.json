@@ -1,0 +1,352 @@
+[
+  {
+    "id": 0,
+    "slug": "ahmedabad",
+    "name": "Narendra Modi Stadium, Ahmedabad",
+    "projectId": "home",
+    "projectTitle": "Home Ground & About Harsh Thumar",
+    "org": "",
+    "landmark": "The huge bowl and its ring of floodlights",
+    "tagline": "The world's biggest cricket stadium, in my own city.",
+    "scoreboard": "HOME · AHMEDABAD",
+    "facts": "I build AI agents that work with real money and data. Founding Engineer at CredPrism (credit fintech) since May 2026; before that DataSlush. Based in Ahmedabad.",
+    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: I build AI agents that work with real money and data. Founding Engineer at CredPrism, previously at DataSlush. Based in Ahmedabad.]]",
+    "numbers": [],
+    "links": [
+      {
+        "label": "LinkedIn",
+        "url": "https://www.linkedin.com/in/harsh-thumar-357037251/"
+      },
+      {
+        "label": "Email",
+        "url": "mailto:harshthummar1000@gmail.com"
+      },
+      {
+        "label": "GitHub",
+        "url": "https://github.com/HarshThumar"
+      }
+    ]
+  },
+  {
+    "id": 1,
+    "slug": "lords",
+    "name": "Lord's, London",
+    "projectId": "P1",
+    "projectTitle": "mcp-auth-tamarin: formal verification of MCP authorization",
+    "org": "",
+    "landmark": "The Victorian pavilion with its balcony; an honours board in the Long Room",
+    "tagline": "Lord's keeps the Laws of Cricket. This project checks the rules AI agents follow.",
+    "scoreboard": "CHECKS 376 · MODELS 9 · REDISCOVERED 3",
+    "facts": "Models MCP's authorization flow in the Tamarin prover: 9 protocol models, 376 lemma checks run in CI. Each weakened variant produces an attack trace; the fixed variant verifies. Rediscovered 3 published, already-fixed MCP SDK advisories. Started as his IETF 127 Hackathon project (remote participant). Write-up co-authored with Prince Upadhyay.",
+    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: Models MCP authorization flow in the Tamarin prover with 9 protocol models and 376 lemma checks run in CI. Rediscovered 3 published, already-fixed MCP SDK advisories. Started as IETF 127 Hackathon project (remote participant). Co-authored with Prince Upadhyay.]]",
+    "numbers": [
+      {
+        "label": "Lemma checks",
+        "value": "376",
+        "source": "CI test run"
+      },
+      {
+        "label": "Protocol models",
+        "value": "9",
+        "source": "Tamarin repository models"
+      },
+      {
+        "label": "Advisories rediscovered",
+        "value": "3",
+        "source": "Published, already-fixed MCP SDK advisories"
+      }
+    ],
+    "links": [
+      {
+        "label": "GitHub Repository",
+        "url": "https://github.com/HarshThumar/mcp-auth-tamarin"
+      },
+      {
+        "label": "Write-up (with Prince Upadhyay)",
+        "url": "[[NEEDS FACT: final write-up URL once O7 is decided; today https://harshthumar.github.io]]"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "slug": "wankhede",
+    "name": "Wankhede, Mumbai",
+    "projectId": "P2",
+    "projectTitle": "Citation-grounded credit-appraisal platform",
+    "org": "CredPrism",
+    "landmark": "The curved roof canopy, sea breeze, city skyline",
+    "tagline": "Mumbai is India's money capital. This is software for lenders.",
+    "scoreboard": "CHECKS 30+ · TESTS 580+ · HIGHLIGHTS 3–5 s",
+    "facts": "Credit-underwriting software for Indian NBFCs at CredPrism. Gemini 2.5 Flash on Vertex AI checks a borrower's bank statement, GST and bureau data against the lender's own credit-policy PDF. 30+ deterministic forensic checks produce findings the LLM must cite, so every claim in the credit memo traces back to a source cell. PDF highlight lookups take 3–5 s instead of 20–30 s. 580+ tests. A human always makes the credit decision.",
+    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: Credit-underwriting software for Indian NBFCs at CredPrism. Gemini 2.5 Flash on Vertex AI checks bank statement, GST, and bureau data against lender credit-policy PDFs. 30+ deterministic forensic checks ensure every claim in the credit memo traces back to a source cell. A human always makes the credit decision.]]",
+    "numbers": [
+      {
+        "label": "Deterministic forensic checks",
+        "value": "30+",
+        "source": "Rule engine verification"
+      },
+      {
+        "label": "Automated tests",
+        "value": "580+",
+        "source": "Test suite with LLM PR-review in CI"
+      },
+      {
+        "label": "PDF highlight lookups",
+        "value": "3–5 s",
+        "source": "Chunk-index grounding (reduced from 20–30 s)"
+      },
+      {
+        "label": "Guided income playbooks",
+        "value": "46",
+        "source": "CAM Excel workbook conversions with golden tests"
+      }
+    ],
+    "links": []
+  },
+  {
+    "id": 3,
+    "slug": "galle",
+    "name": "Galle, Sri Lanka",
+    "projectId": "P3",
+    "projectTitle": "Compliant multilingual GenAI content engine",
+    "org": "CredPrism",
+    "landmark": "The Dutch fort wall along the ground, the clock tower, the sea",
+    "tagline": "A fort wall guards the ground. Here code guards every number.",
+    "scoreboard": "CAUGHT 100% · FALSE ALARMS 0 · LANGUAGES 4",
+    "facts": "Creates posts and client messages for mutual-fund distributors in 4 languages and 7 formats. The LLM never writes a digit: it emits fact placeholders, and code rejects any stray number, including Devanagari and Gujarati digits. LLM compliance reviewer: 100% of violations caught, 0 false positives on a 62-case test; 16/18 on an adversarial red-team set. About ₹2.9 per draft, tracked by a spend ledger with a kill switch.",
+    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: Produces posts and client communications for mutual-fund distributors at CredPrism in 4 languages and 7 formats. The LLM never writes a digit; code rejects stray numbers across Latin, Devanagari, and Gujarati scripts. Spend ledger with kill switch maintains roughly ₹2.9 per draft.]]",
+    "numbers": [
+      {
+        "label": "Violations caught",
+        "value": "100%",
+        "source": "62-case test suite"
+      },
+      {
+        "label": "False positives",
+        "value": "0",
+        "source": "62-case test suite"
+      },
+      {
+        "label": "Adversarial red-team catch rate",
+        "value": "16/18",
+        "source": "Red-team test set"
+      },
+      {
+        "label": "Languages",
+        "value": "4",
+        "source": "Multilingual generation"
+      },
+      {
+        "label": "Formats",
+        "value": "7",
+        "source": "Supported output formats"
+      },
+      {
+        "label": "Cost per draft",
+        "value": "₹2.9",
+        "source": "Internal spend ledger"
+      }
+    ],
+    "links": []
+  },
+  {
+    "id": 4,
+    "slug": "the-oval",
+    "name": "The Oval, London",
+    "projectId": "P4",
+    "projectTitle": "Mutual-fund data lake",
+    "org": "CredPrism",
+    "landmark": "The Victorian gas holders (giant round storage frames)",
+    "tagline": "The Oval has giant storage tanks. This project stores 8.6M rows.",
+    "scoreboard": "NAV ROWS 8.6M · HOLDINGS 7.7M · GATES 7",
+    "facts": "55 fund houses, 7.7M holdings, 8.6M NAV rows, 3.8M deal rows, from 63.8K source files. 7 quality gates and an atomic publish with rollback.",
+    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: Mutual-fund data lake at CredPrism covering 55 fund houses, 7.7M holdings, 8.6M NAV rows, and 3.8M deal rows from 63.8K source files. Built with 7 quality gates and atomic publish with automated rollback.]]",
+    "numbers": [
+      {
+        "label": "Fund houses",
+        "value": "55",
+        "source": "Covered fund houses"
+      },
+      {
+        "label": "Holdings rows",
+        "value": "7.7M",
+        "source": "Data lake storage"
+      },
+      {
+        "label": "NAV rows",
+        "value": "8.6M",
+        "source": "Data lake storage"
+      },
+      {
+        "label": "Deal rows",
+        "value": "3.8M",
+        "source": "Data lake storage"
+      },
+      {
+        "label": "Source files",
+        "value": "63.8K",
+        "source": "Ingested source files"
+      },
+      {
+        "label": "Quality gates",
+        "value": "7",
+        "source": "Publish verification gates"
+      }
+    ],
+    "links": []
+  },
+  {
+    "id": 5,
+    "slug": "sharjah",
+    "name": "Sharjah",
+    "projectId": "P5",
+    "projectTitle": "Load test and fix",
+    "org": "CredPrism",
+    "landmark": "Desert, sand blowing in; the stadium's low stands",
+    "tagline": "Desert Storm: this system survived a storm of users.",
+    "scoreboard": "THROUGHPUT 9x · p95 27.5 s → 1.5 s",
+    "facts": "Load-tested with k6; the database collapsed at ~50 users. Fixed it: 9x throughput, p95 latency from 27.5 s to 1.5 s.",
+    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: System load-tested with k6 at CredPrism. When database collapsed at ~50 users, resolved bottlenecks to achieve 9x throughput and cut p95 latency from 27.5 s down to 1.5 s.]]",
+    "numbers": [
+      {
+        "label": "Throughput gain",
+        "value": "9x",
+        "source": "k6 benchmark comparison"
+      },
+      {
+        "label": "Failure threshold before fix",
+        "value": "~50",
+        "source": "Initial k6 load test"
+      },
+      {
+        "label": "p95 latency before fix",
+        "value": "27.5 s",
+        "source": "k6 load test run"
+      },
+      {
+        "label": "p95 latency after fix",
+        "value": "1.5 s",
+        "source": "Optimized benchmark run"
+      }
+    ],
+    "links": []
+  },
+  {
+    "id": 6,
+    "slug": "eden-gardens",
+    "name": "Eden Gardens, Kolkata",
+    "projectId": "P6",
+    "projectTitle": "IPL Auction Arena (in development)",
+    "org": "",
+    "landmark": "Huge packed stands; the loudest crowd",
+    "tagline": "The loudest crowd in cricket, for an auction full of drama.",
+    "scoreboard": "LOTS 1,019 · TESTS 106 · IN DEVELOPMENT",
+    "facts": "In development. A rule-faithful auction engine that replays all 1,019 lots of the 2022–26 IPL auctions exactly (0 rule violations, 106 tests), plus a 5,405-row bid-decision dataset. 10 AI franchise agents, in development.",
+    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: Project status: in development. Rule-faithful auction engine replaying all 1,019 lots of 2022–26 IPL auctions exactly (0 rule violations across 106 tests) over a 5,405-row bid-decision dataset. 10 AI franchise agents currently in development.]]",
+    "numbers": [
+      {
+        "label": "Lots replayed",
+        "value": "1,019",
+        "source": "2022–26 IPL auctions replay"
+      },
+      {
+        "label": "Engine test suite",
+        "value": "106",
+        "source": "Engine tests, 0 rule violations"
+      },
+      {
+        "label": "Bid-decision rows",
+        "value": "5,405",
+        "source": "Historical auction dataset"
+      },
+      {
+        "label": "Franchise agents",
+        "value": "10",
+        "source": "AI franchise agents in development"
+      }
+    ],
+    "links": [
+      {
+        "label": "GitHub Repository",
+        "url": "https://github.com/HarshThumar/ipl-auction-arena"
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "slug": "newlands",
+    "name": "Newlands, Cape Town",
+    "projectId": "P7",
+    "projectTitle": "Zero-cost GAIA agent",
+    "org": "",
+    "landmark": "Table Mountain behind the ground",
+    "tagline": "A summit reached at zero cost.",
+    "scoreboard": "SCORE 18/20 · TOOLS 13 · COST $0",
+    "facts": "LangGraph ReAct agent: 18/20 (90%) on the Hugging Face Agents Course GAIA Level 1 set, at $0 model cost (gpt-oss-120b on Cloudflare Workers AI). 13 tools including search, a Python sandbox, vision, Whisper and chess via Stockfish. Repairs malformed tool calls; majority vote over 3 runs.",
+    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: LangGraph ReAct agent scoring 18/20 (90%) on Hugging Face Agents Course GAIA Level 1 set at $0 model cost using gpt-oss-120b on Cloudflare Workers AI. Equipped with 13 tools, runtime tool call repair, and majority vote over 3 runs.]]",
+    "numbers": [
+      {
+        "label": "GAIA Level 1 score",
+        "value": "18/20",
+        "source": "Hugging Face Agents Course GAIA Level 1 benchmark"
+      },
+      {
+        "label": "Model API cost",
+        "value": "$0",
+        "source": "gpt-oss-120b on Cloudflare Workers AI"
+      },
+      {
+        "label": "Integrated tools",
+        "value": "13",
+        "source": "Search, Python sandbox, vision, Whisper, Stockfish chess"
+      }
+    ],
+    "links": [
+      {
+        "label": "Hugging Face Space",
+        "url": "https://huggingface.co/spaces/Harsh5764/zero-cost-gaia-agent"
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "slug": "mcg",
+    "name": "MCG, Melbourne",
+    "projectId": "P8",
+    "projectTitle": "Agent-E: multi-agent evaluator for NGO applications",
+    "org": "DataSlush",
+    "landmark": "The vast multi-tier bowl, light towers",
+    "tagline": "The biggest crowd to judge. Agents that review every applicant.",
+    "scoreboard": "REVIEW TIME ABOUT −70% · PROGRAMS 3",
+    "facts": "CrewAI agents score each applicant per criterion with a written justification. RAG over PDF/DOCX submissions (ChromaDB), async jobs on Cloud Run + Cloud Tasks, LangSmith tracing. Cut manual review time by about 70% across 3 program types.",
+    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: CrewAI multi-agent application evaluator at DataSlush scoring grant applications per criterion with written justifications via RAG over PDF/DOCX submissions (ChromaDB). Runs async jobs on Cloud Run and Cloud Tasks with LangSmith tracing.]]",
+    "numbers": [
+      {
+        "label": "Manual review time cut",
+        "value": "~70%",
+        "source": "About 70%, across 3 program types"
+      },
+      {
+        "label": "Program types evaluated",
+        "value": "3",
+        "source": "Supported grant programs"
+      }
+    ],
+    "links": []
+  },
+  {
+    "id": 9,
+    "slug": "dharamsala",
+    "name": "Dharamsala",
+    "projectId": "P9",
+    "projectTitle": "Live cricket product: backend, frontend, broadcast overlay, deployment",
+    "org": "DataSlush",
+    "landmark": "Snow-capped Himalayan peaks right behind the stands",
+    "tagline": "The ground nearest the mountains; software running on a box at the edge.",
+    "scoreboard": "BACKEND · FRONTEND · OVERLAY · DEPLOYED",
+    "facts": "Team project: an on-premise edge box that records IP cameras and detects deliveries live. Harsh's part: the backend, the frontend, the live broadcast overlay, and the deployment.",
+    "panelText": "[[COPY: 2–3 sentences in Harsh's voice, using only the facts field. Builder draft to rewrite: On-premise edge recording and delivery detection system at DataSlush. Built the backend, frontend, live broadcast overlay, and edge box deployment.]]",
+    "numbers": [],
+    "links": []
+  }
+]

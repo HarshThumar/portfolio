@@ -1,0 +1,94 @@
+name: CI and preview deploy
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    branches: ['main']
+
+# Read-only by default; only the deploy job gets Pages permissions.
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Quality checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - run: npm ci
+
+      # The earlier employer's name lives in a repo secret, never in the code.
+      - name: Run quality gates
+        run: npm run check
+        env:
+          FORBIDDEN_NAMES: ${{ secrets.FORBIDDEN_NAMES }}
+
+  devices:
+    name: Android and desktop smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm run test:devices
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: device-screenshots
+          path: progress/devices/
+
+  deploy:
+    name: Deploy preview to GitHub Pages
+    needs: [check, devices]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - run: npm ci
+
+      # A project repo is served at /<repo-name>/; the final user-site repo is served at /.
+      - name: Build site
+        run: npm run build
+        env:
+          BASE_PATH: ${{ endsWith(github.repository, '.github.io') && '/' || format('/{0}/', github.event.repository.name) }}
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

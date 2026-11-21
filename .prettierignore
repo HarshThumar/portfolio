@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.astro/
+coverage/
+progress/*.png
+progress/*.mp4
+.playwright-mcp/
+package-lock.json
+assets/
+assets-src/
+docs/
+GEMINI.md
+PLAN.md

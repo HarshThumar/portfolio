@@ -1,0 +1,20 @@
+:root {
+  /* Palette (docs/04). The only place colours are defined; check-style enforces it. */
+  --cream: #f3ead3;
+  --ink: #1e1b16;
+  --outfield: #4e7a3a;
+  --outfield-2: #5c8a45;
+  --pitch: #c9b27c;
+  --willow: #d8b87a;
+  --timber: #6b4a2b;
+  --leather: #a3271f;
+  --night: #0e1a24;
+  --flood: #fff6da;
+
+  /* Type (Alfa Slab One picked by Harsh on 2026-11-21, see DECISIONS.md) */
+  --font-display: 'Alfa Slab One', Georgia, serif;
+  --font-body: 'Source Serif 4', Georgia, serif;
+
+  /* One radius everywhere (docs/06) */
+  --radius: 4px;
+}

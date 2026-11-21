@@ -1,0 +1,21 @@
+{
+  "name": "game",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dimforge/rapier3d-compat": "0.21.0",
+    "gsap": "3.15.1",
+    "howler": "2.2.4",
+    "three": "0.187.0"
+  },
+  "devDependencies": {
+    "@types/howler": "2.2.13",
+    "@types/three": "0.187.0",
+    "typescript": "5.8.3"
+  }
+}

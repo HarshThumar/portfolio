@@ -1,0 +1,4 @@
+# Keep LF everywhere so Prettier and the shell hook behave the same on Windows and CI.
+* text=auto eol=lf
+*.png binary
+*.woff2 binary

@@ -1,0 +1,15 @@
+{
+  "threshold": 3,
+  "reporters": ["console"],
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.astro/**",
+    "**/coverage/**",
+    "**/progress/**",
+    "**/.playwright-mcp/**",
+    "**/package-lock.json",
+    "**/docs/**"
+  ],
+  "format": ["javascript", "typescript", "astro", "css", "json"]
+}

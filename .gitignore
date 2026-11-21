@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+.astro/
+build/
+coverage/
+
+# Cloudflare / Worker
+.wrangler/
+.mf/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local list of names that must never appear in the repo (read by scripts/lib/forbidden-names.mjs)
+.forbidden-names
+
+# Playwright
+test-results/
+playwright-report/

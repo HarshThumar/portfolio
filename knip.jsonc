@@ -1,0 +1,26 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/**/*.mjs"]
+    },
+    "game": {
+      "project": ["src/**/*.ts"]
+    },
+    "site": {
+      "entry": ["src/pages/**/*.astro"],
+      "project": ["src/**/*.{astro,ts,js}"]
+    }
+  },
+  // Pinned in M0.3 but first imported in M1 (physics, sound, timelines) or used only by
+  // CI tools that are not wired into `npm run check` yet (Lighthouse M4, Vitest M1).
+  // Remove each entry as soon as the package is imported.
+  "ignoreDependencies": [
+    "@dimforge/rapier3d-compat",
+    "howler",
+    "@types/howler",
+    "gsap",
+    "@lhci/cli",
+    "vitest"
+  ]
+}

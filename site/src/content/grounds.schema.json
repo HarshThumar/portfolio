@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GroundsData",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "id",
+      "slug",
+      "name",
+      "projectId",
+      "projectTitle",
+      "org",
+      "landmark",
+      "tagline",
+      "scoreboard",
+      "facts",
+      "panelText",
+      "numbers",
+      "links"
+    ],
+    "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "slug": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]+$"
+      },
+      "name": {
+        "type": "string"
+      },
+      "projectId": {
+        "type": "string"
+      },
+      "projectTitle": {
+        "type": "string"
+      },
+      "org": {
+        "type": "string",
+        "enum": ["", "CredPrism", "DataSlush"],
+        "description": "Employer the work is shown under; empty for personal projects"
+      },
+      "landmark": {
+        "type": "string"
+      },
+      "tagline": {
+        "type": "string"
+      },
+      "scoreboard": {
+        "type": "string"
+      },
+      "facts": {
+        "type": "string",
+        "description": "Plain facts copied from docs/02. Feeds the chatbot; not shown as panel copy."
+      },
+      "panelText": {
+        "type": "string",
+        "description": "Visible panel copy, written by Harsh. [[COPY]] marker until he does."
+      },
+      "numbers": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["label", "value", "source"],
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "links": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["label", "url"],
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "additionalProperties": false
+  }
+}

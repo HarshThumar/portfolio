@@ -1,0 +1,68 @@
+{
+  "name": "Harsh Thumar",
+  "city": "Ahmedabad, India",
+  "positioning": "I build AI agents that work with real money and data.",
+  "education": "B.Tech IT, CHARUSAT, 2026",
+  "roles": [
+    {
+      "org": "CredPrism",
+      "title": "Founding Engineer",
+      "dates": "since May 2026",
+      "note": "credit fintech"
+    },
+    {
+      "org": "DataSlush",
+      "title": "Associate AI Data Engineer",
+      "dates": "May – Jun 2026",
+      "note": ""
+    },
+    {
+      "org": "DataSlush",
+      "title": "AI Data Engineer Intern",
+      "dates": "Aug 2025 – Apr 2026",
+      "note": ""
+    },
+    {
+      "org": "Peakenza Software Services",
+      "title": "Web Developer",
+      "dates": "May – Jul 2024",
+      "note": ""
+    },
+    {
+      "org": "CHARUSAT placement cell",
+      "title": "Placement Coordinator",
+      "dates": "Dec 2024 – Jun 2026",
+      "note": ""
+    }
+  ],
+  "interests": "Multi-sport fan (cricket, basketball), reads novels",
+  "links": [
+    { "label": "LinkedIn", "url": "https://www.linkedin.com/in/harsh-thumar-357037251/" },
+    { "label": "GitHub", "url": "https://github.com/HarshThumar" },
+    { "label": "Email", "url": "mailto:harshthummar1000@gmail.com" }
+  ],
+  "smallerWork": [
+    {
+      "title": "Document AI for project finance",
+      "org": "DataSlush",
+      "facts": "Docling extraction with bounding boxes, LlamaIndex + pgvector per deal, cross-document conflict detection, 10+ generated document types with citations."
+    },
+    {
+      "title": "Conversational AI suite",
+      "org": "DataSlush",
+      "facts": "Web chatbot, phone/web callbot in 3 languages, meeting bot that answers live in under a second."
+    },
+    {
+      "title": "Shopify to BigQuery pipeline",
+      "org": "DataSlush",
+      "facts": "Airbyte, Dataform, 15+ Looker Studio dashboards."
+    },
+    {
+      "title": "GroundBook",
+      "org": "",
+      "facts": "Sports-venue booking on Next.js, Supabase and Razorpay, with Gemini natural-language search. A row-locked Postgres function prevents double bookings.",
+      "url": "https://booking-sable-iota.vercel.app"
+    }
+  ],
+  "community": "OWASP GenAI Agentic Security Initiative participant; follows the IETF OAuth and WIMSE working groups."
+}
