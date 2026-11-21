@@ -3,7 +3,6 @@ import { WebGPURenderer } from 'three/webgpu';
 import RAPIER from '@dimforge/rapier3d-compat';
 import { TypedEmitter } from './events/emitter';
 import { createDebugPanel } from './debug/debug-panel';
-import { createGameLoop } from './loop/loop';
 import { createStageInputs } from './loop/stage-inputs';
 import { createStageInteractions } from './loop/stage-interactions';
 import { createSharedMaterials } from './world/palette';
@@ -11,7 +10,8 @@ import { createGroundBase } from './world/ground-base';
 import { createLordsPavilion } from './world/lords-pavilion';
 import { createHonoursBoard, type HonoursBoardController } from './world/honours-board';
 import { createScoreboard } from './world/scoreboard';
-import { assembleStages, createInitialState } from './loop/game-state';
+import { createCrowd } from './world/crowd';
+import { createInitialState, startMainLoop, type GameLoop } from './loop/game-state';
 import { createRoller } from './vehicle/roller';
 import { setupTouchAndClickControls } from './vehicle/touch-controls';
 import { createStumps } from './interactions/stumps';
@@ -133,7 +133,7 @@ function setupResizeHandler(
 }
 
 function createGameDisposer(params: {
-  loop: ReturnType<typeof createGameLoop>;
+  loop: GameLoop;
   cleanupResize: () => void;
   cleanupInputs: () => void;
   touchControls: { destroy: () => void };
@@ -144,6 +144,7 @@ function createGameDisposer(params: {
   groundBase: { dispose: () => void };
   pavilion: { dispose: () => void };
   scoreboard: { dispose: () => void };
+  crowd: { dispose: () => void };
   vehicle: VehicleState;
   materials: { dispose: () => void };
   renderer: WebGPURenderer;
@@ -162,6 +163,7 @@ function createGameDisposer(params: {
     params.groundBase.dispose();
     params.pavilion.dispose();
     params.scoreboard.dispose();
+    params.crowd.dispose();
     params.vehicle.model.dispose();
     params.materials.dispose();
     params.renderer.dispose();
@@ -188,7 +190,8 @@ function createWorldEntities(
     Math.PI / 4
   );
   const vehicle = createRoller(scene, world, RAPIER, materials, { x: 0, y: 0.6, z: 6 }, Math.PI);
-  return { groundBase, pavilion, scoreboard, vehicle };
+  const crowd = createCrowd(scene);
+  return { groundBase, pavilion, scoreboard, vehicle, crowd };
 }
 
 function createCamera(): THREE.PerspectiveCamera {
@@ -213,7 +216,7 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
   setupLighting(scene);
 
   const materials = createSharedMaterials();
-  const { groundBase, pavilion, scoreboard, vehicle } = createWorldEntities(
+  const { groundBase, pavilion, scoreboard, vehicle, crowd } = createWorldEntities(
     scene,
     world,
     materials
@@ -255,15 +258,14 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
     stampBanner
   );
 
-  const stages = assembleStages(
+  const loop = startMainLoop({
+    state,
     stageInputs,
     stageInteractions,
-    debugController.update,
-    soundManager
-  );
-  stageInteractions.addUpdatable(scoreboard.update);
-  const loop = createGameLoop(state, stages);
-  loop.start();
+    updateDebugPanel: debugController.update,
+    soundManager,
+    extraUpdatables: [scoreboard.update, crowd.update]
+  });
   const cleanupResize = setupResizeHandler(camera, renderer, events);
 
   const dispose = createGameDisposer({
@@ -278,6 +280,7 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
     groundBase,
     pavilion,
     scoreboard,
+    crowd,
     vehicle,
     materials,
     renderer,

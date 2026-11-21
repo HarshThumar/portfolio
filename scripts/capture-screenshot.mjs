@@ -84,6 +84,15 @@ async function main() {
     await page.waitForSelector('#hud-mute-btn', { state: 'visible' });
     await page.click('#hud-mute-btn');
     await page.waitForTimeout(500);
+  } else if (action === 'crowd') {
+    // Drive along the boundary to trigger the Mexican wave in the stands
+    await page.keyboard.down('KeyD');
+    await page.keyboard.down('KeyW');
+    await page.waitForTimeout(3000);
+    await page.keyboard.up('KeyD');
+    await page.waitForTimeout(1000);
+    await page.keyboard.up('KeyW');
+    await page.waitForTimeout(1000);
   } else {
     await page.waitForTimeout(1000);
   }

@@ -22,4 +22,5 @@ test('home page fits the screen', async ({ page }, testInfo) => {
 
   const file = testInfo.project.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   await page.screenshot({ path: `progress/devices/${file}.png` });
+  await page.close();
 });

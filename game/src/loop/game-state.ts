@@ -4,6 +4,9 @@ import type { WebGPURenderer } from 'three/webgpu';
 import type { TypedEmitter } from '../events/emitter';
 import type { GameEvents, GameState, Stage } from '../types';
 import type { SoundManager } from '../audio/audio';
+import { createGameLoop, type GameLoop } from './loop';
+
+export type { GameLoop };
 import { createStageVehicle } from './stage-vehicle';
 import { createStagePhysics } from './stage-physics';
 import { createStageInterpolate } from './stage-interpolate';
@@ -13,7 +16,7 @@ import { createStageAudio } from './stage-audio';
 import { createStageRender } from './stage-render';
 import { createStageUi } from './stage-ui';
 
-export function assembleStages(
+function assembleStages(
   stageInputs: Stage,
   stageInteractions: Stage,
   updateDebugPanel: (state: GameState) => void,
@@ -31,6 +34,26 @@ export function assembleStages(
     createStageRender(),
     createStageUi(updateDebugPanel)
   ];
+}
+
+export function startMainLoop(params: {
+  state: GameState;
+  stageInputs: Stage;
+  stageInteractions: { addUpdatable: (fn: (state: GameState) => void) => void } & Stage;
+  updateDebugPanel: (state: GameState) => void;
+  soundManager: SoundManager;
+  extraUpdatables: Array<(state: GameState) => void>;
+}): GameLoop {
+  const stages = assembleStages(
+    params.stageInputs,
+    params.stageInteractions,
+    params.updateDebugPanel,
+    params.soundManager
+  );
+  params.extraUpdatables.forEach((fn) => params.stageInteractions.addUpdatable(fn));
+  const loop = createGameLoop(params.state, stages);
+  loop.start();
+  return loop;
 }
 
 export function createInitialState(params: {
