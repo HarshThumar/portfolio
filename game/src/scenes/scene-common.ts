@@ -4,6 +4,7 @@ import { createPhysicsWorld } from '../loop/engine-setup';
 import { createAtmosphere } from '../world/atmosphere';
 import { createSkySystem, type RoofLights } from '../world/sky';
 import { createBlobShadow } from '../world/blob-shadow';
+import { createRollerTrail } from '../world/roller-trail';
 import { createRoller } from '../vehicle/roller';
 import type { FieldShape } from '../world/field-shape';
 import type { SharedMaterials } from '../world/palette';
@@ -55,6 +56,7 @@ export function createSceneBase(
     obj.castShadow = true;
   });
   const shadow = createBlobShadow(scene);
+  const trail = createRollerTrail(scene, field);
 
   const follow = (): void => {
     const { position, quaternion } = vehicle.model.group;
@@ -67,8 +69,9 @@ export function createSceneBase(
     scene,
     world,
     vehicle,
-    updatables: [sky.update, follow],
+    updatables: [sky.update, follow, trail.update],
     dispose: () => {
+      trail.dispose();
       shadow.dispose();
       sky.dispose();
       atmosphere.dispose();
