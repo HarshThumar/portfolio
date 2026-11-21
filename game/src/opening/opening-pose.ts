@@ -4,7 +4,7 @@ import { STAMP_DIR, STAMP_UP } from './giant-ball';
 // Where the opening camera sits and how the ball turns its stamp to it.
 
 /** The ball hangs high above the hub, inside the overcast, with the stadium hidden below. */
-export const OPENING_CENTRE = new THREE.Vector3(0, 320, 0);
+export const OPENING_CENTRE = new THREE.Vector3(0, 220, 0);
 
 const ORBIT_RADIUS = 17;
 const ORBIT_SPEED = 0.1;
@@ -47,4 +47,14 @@ export function stampFacing(cameraPos: THREE.Vector3, out: THREE.Quaternion): TH
   right.crossVectors(up, n);
   worldBasis.makeBasis(right, up, n).multiply(localBasisT);
   return out.setFromRotationMatrix(worldBasis);
+}
+
+const SEAM_TIP = -0.75;
+const tip = new THREE.Quaternion();
+
+/** The pose that shows the main seam across the front of the ball (for the stitching). */
+export function seamFacing(cameraPos: THREE.Vector3, out: THREE.Quaternion): THREE.Quaternion {
+  stampFacing(cameraPos, out);
+  // `right` was left by stampFacing: roll the stamp up and away, the seam up into view.
+  return out.premultiply(tip.setFromAxisAngle(right, SEAM_TIP));
 }

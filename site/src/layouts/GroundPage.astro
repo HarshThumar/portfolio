@@ -108,6 +108,7 @@ const tour = { grounds, start, built: BUILT_GROUNDS, base, opening };
       };
       if (canvas instanceof HTMLCanvasElement && canvas.dataset.tour) {
         const tour = JSON.parse(canvas.dataset.tour);
+        onProgress(0.12);
         import('game')
           .then(({ initGame }) => {
             onProgress(0.3);

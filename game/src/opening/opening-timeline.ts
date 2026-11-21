@@ -17,11 +17,11 @@ export interface OpeningPhaseState {
 
 // The gather plays the baked kit flight (about 2.8 s, see kit-flight.json); the leather starts
 // closing over the pile while it is still settling.
-export const GATHER_START = 0.2;
-export const GATHER_END = 2.2;
-export const PANELS_END = 2.9;
-export const STITCH_END = 3.6;
-export const STAMP_END = 4.5;
+export const GATHER_START = 0.1;
+export const GATHER_END = 1.7;
+export const PANELS_END = 2.35;
+export const STITCH_END = 3.35;
+export const STAMP_END = 4.25;
 
 export function clamp(v: number, min = 0, max = 1): number {
   return Math.max(min, Math.min(max, v));

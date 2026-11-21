@@ -49,6 +49,9 @@ export function updateActivePieces(active: ActivePiece[], t: number, panels: num
   const k = f - i0;
   // As the leather closes over it, the pile squeezes a little and is gone once it's shut.
   const tuck = 1 - 0.4 * easeInOutCubic(panels);
+  // The whole pile keeps turning slowly, so it never sits dead while the leather closes.
+  const cluster = active[0]?.holder.parent;
+  if (cluster) cluster.rotation.y = Math.max(0, t) * 0.5;
   active.forEach((item, i) => {
     const a = DATA.frames[i0]![i]!;
     const b = DATA.frames[i1]![i]!;

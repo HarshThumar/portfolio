@@ -7,7 +7,7 @@ import * as THREE from 'three/webgpu';
 
 const OVERCAST_FOG = new THREE.Color(0xd6cfbf);
 const FOG_NEAR = 60;
-const FOG_FAR = 290;
+const FOG_FAR = 230;
 const HEMI = 2.1;
 const KEY = 1.1;
 
@@ -16,6 +16,8 @@ export interface OpeningSky {
   update: (camera: THREE.Camera) => void;
   /** 0 = overcast, 1 = the hub's own sky and light. */
   setClear: (k: number) => void;
+  /** 0→1: a soft white-out over the whole view while the camera is inside the cloud deck. */
+  setCloudCover: (k: number) => void;
   dispose: () => void;
 }
 
@@ -68,6 +70,10 @@ export function createOpeningSky(scene: THREE.Scene): OpeningSky {
 
   let clear = 0;
   let restored = false;
+  const cover = document.createElement('div');
+  cover.className = 'opening-cloud-cover';
+  cover.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(cover);
 
   const apply = (): void => {
     const useHub = clear >= 0.5;
@@ -93,9 +99,8 @@ export function createOpeningSky(scene: THREE.Scene): OpeningSky {
     restored = true;
     clear = 1;
     apply();
-    scene.remove(hemi, key, key.target);
-    hemi.dispose();
-    key.dispose();
+    // The opening's two lights stay in the scene at zero: taking them out would change the
+    // light set and make every material recompile, a visible hitch just as the hub appears.
     overcast.dispose();
   };
 
@@ -114,6 +119,12 @@ export function createOpeningSky(scene: THREE.Scene): OpeningSky {
       if (clear >= 1) restore();
       else apply();
     },
-    dispose: restore
+    setCloudCover: (k) => {
+      cover.style.opacity = String(Math.max(0, Math.min(1, k)) * 0.97);
+    },
+    dispose: () => {
+      restore();
+      cover.remove();
+    }
   };
 }

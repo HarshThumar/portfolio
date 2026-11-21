@@ -93,7 +93,7 @@ def add_piece(info, index, turn, rng):
 
     # Held still (kinematic) and drifting gently inward until its release, so the pieces set
     # off one after another instead of all at once.
-    release = 1 + int(FPS * (0.05 + turn * 0.04 + rng.random() * 0.12))
+    release = 1 + int(FPS * (0.05 + turn * 0.028 + rng.random() * 0.1))
     rb.kinematic = True
     obj.keyframe_insert("location", frame=1)
     obj.keyframe_insert("rotation_quaternion", frame=1)
@@ -140,6 +140,12 @@ def main():
     objects = [add_piece(info, i, turns[i], rng) for i, info in enumerate(infos)]
     add_pull()
     frames = bake(scene, objects)
+    # Centre the settled pile on the ball: shift every frame by the pile's final centroid.
+    n = len(objects)
+    cx, cy, cz = (sum(p[k] for p in frames[-1]) / n for k in range(3))
+    for row in frames:
+        for p in row:
+            p[0], p[1], p[2] = round(p[0] - cx, 3), round(p[1] - cy, 3), round(p[2] - cz, 3)
 
     last = frames[-1]
     reach = max(Vector(p[:3]).length for p in last)

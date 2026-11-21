@@ -1,7 +1,12 @@
 import * as THREE from 'three/webgpu';
+import { OPENING_CENTRE } from './opening-pose';
 
 // Soft warm-grey cloud billboards for the overcast opening: a loose shell around the ball and a
 // thick deck below it that the ball is bowled down through.
+
+/** The cloud deck the ball is bowled down through (world heights). */
+export const DECK_TOP = OPENING_CENTRE.y - 60;
+export const DECK_BOTTOM = OPENING_CENTRE.y - 120;
 
 export interface OpeningClouds {
   group: THREE.Group;
@@ -23,9 +28,10 @@ function drawCloud(seed: number): THREE.CanvasTexture {
   if (ctx) {
     const blobs = 7 + seed * 2;
     for (let i = 0; i < blobs; i++) {
-      const x = size * (0.22 + 0.56 * Math.random());
-      const y = size * (0.4 + 0.22 * Math.random());
-      const r = size * (0.16 + 0.14 * Math.random());
+      // Kept well inside the canvas, so no blob is ever cut off in a straight line.
+      const r = size * (0.12 + 0.1 * Math.random());
+      const x = size * (0.3 + 0.4 * Math.random());
+      const y = size * (0.42 + 0.16 * Math.random());
       const g = ctx.createRadialGradient(x, y, 0, x, y, r);
       // One shade per blob, fading out smoothly: lighter blobs on top, greyer underneath.
       const shade = Math.round(240 - (y / size) * 55);
@@ -58,7 +64,7 @@ function addCloud(
   clouds.push({ sprite, drift: 0.6 + Math.random() * 1.2 });
 }
 
-/** `centre` is the ball; the deck sits 70–150 m below it. */
+/** `centre` is the ball; the deck sits 60–120 m below it. */
 export function createOpeningClouds(centre: THREE.Vector3): OpeningClouds {
   const group = new THREE.Group();
   group.name = 'opening-clouds';
@@ -84,11 +90,14 @@ export function createOpeningClouds(centre: THREE.Vector3): OpeningClouds {
     addCloud(group, clouds, materials[i % 2]!, pos, Math.min(2 * (dist - 22), 26 + dist * 0.4));
   }
   // The deck: thick and wide, centred under the ball so the camera falls straight through it.
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < 24; i++) {
     const a = Math.random() * Math.PI * 2;
     const dist = Math.sqrt(Math.random()) * 90;
-    const y = -70 - Math.random() * 80;
-    pos.set(centre.x + Math.cos(a) * dist, centre.y + y, centre.z + Math.sin(a) * dist);
+    pos.set(
+      centre.x + Math.cos(a) * dist,
+      DECK_BOTTOM + Math.random() * (DECK_TOP - DECK_BOTTOM),
+      centre.z + Math.sin(a) * dist
+    );
     addCloud(group, clouds, materials[2]!, pos, 60 + Math.random() * 50);
   }
 

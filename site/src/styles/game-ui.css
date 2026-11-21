@@ -140,15 +140,20 @@ button {
   position: absolute;
   bottom: 2px;
   left: calc(var(--progress) * (100% - 24px));
-  transform: rotate(calc(var(--progress) * 900deg));
-  transition:
-    left 0.4s ease-out,
-    transform 0.4s ease-out;
+  transition: left 0.6s ease-out;
+  /* Always rolling, so it never looks stuck while the ground is being built. */
+  animation: loader-roll 0.9s linear infinite;
+}
+
+@keyframes loader-roll {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .loader-ball {
-    transform: none;
+    animation: none;
   }
 }
 
@@ -212,6 +217,16 @@ body.opening .hud {
 
 .opening-link {
   color: var(--leather);
+}
+
+/* Inside the cloud deck on the way down: the whole view goes soft white for a moment. */
+.opening-cloud-cover {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(ellipse at 50% 45%, #f7f4ec 0%, #e8e3d6 70%, #d9d3c4 100%);
 }
 
 /* The stamped ball can be grabbed and spun. */
