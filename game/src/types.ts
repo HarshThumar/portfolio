@@ -127,6 +127,8 @@ export interface GameOptions {
   /** The site's base URL ending in '/', so the address bar follows the scene. */
   base: string;
   debug?: boolean;
+  opening?: boolean;
+  onProgress?: (p: number) => void;
 }
 
 export interface GameInstance {

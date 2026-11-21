@@ -3,6 +3,8 @@ export interface SoundManager {
   playStumpClatter: () => void;
   playHowzat: () => void;
   playSixRoar: () => void;
+  playWhoosh: () => void;
+  playThud: () => void;
   playHonk: () => void;
   playBrakeSqueak: () => void;
   playFlip: () => void;
@@ -116,7 +118,13 @@ function tone(
   osc.stop(t + dur);
 }
 
-function noiseBurst(bus: Bus, dur: number, peak: number, v: NoiseVariant): void {
+function noiseBurst(
+  bus: Bus,
+  dur: number,
+  peak: number,
+  v: NoiseVariant,
+  endFreq?: number
+): void {
   const { ctx } = bus;
   const t = ctx.currentTime;
   const src = ctx.createBufferSource();
@@ -126,10 +134,11 @@ function noiseBurst(bus: Bus, dur: number, peak: number, v: NoiseVariant): void 
   const filter = ctx.createBiquadFilter();
   filter.type = 'bandpass';
   filter.frequency.setValueAtTime(v.freq * jitter(), t);
+  if (endFreq) filter.frequency.exponentialRampToValueAtTime(endFreq, t + dur);
   filter.Q.setValueAtTime(v.q, t);
   const gain = ctx.createGain();
   gain.gain.setValueAtTime(0.01, t);
-  gain.gain.linearRampToValueAtTime(peak, t + 0.2);
+  gain.gain.linearRampToValueAtTime(peak, t + Math.min(0.2, dur * 0.25));
   gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
   src.connect(filter);
   filter.connect(gain);
@@ -211,6 +220,11 @@ function createPlayback(getBus: () => Bus | null) {
     playHowzat: play((b) => noiseBurst(b, 1.4, 0.35, pick(HOWZAT_VARIANTS))),
     // The six roar is the loudest cue, so nothing else may exceed its 0.4 peak.
     playSixRoar: play((b) => noiseBurst(b, 1.8, 0.4, pick(ROAR_VARIANTS))),
+    playWhoosh: play((b) => noiseBurst(b, 0.6, 0.25, { freq: 2200, q: 1.4 }, 300)),
+    playThud: play((b) => {
+      tone(b, 'sine', 60, 0.35, 0.35, 0, 160);
+      noiseBurst(b, 0.2, 0.22, { freq: 140, q: 1.0 });
+    }),
     playHonk: play((b) => {
       tone(b, 'sawtooth', 440, 0.08, 0.35, 0, 1200);
       tone(b, 'sawtooth', 554, 0.08, 0.35, 0, 1200);

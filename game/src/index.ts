@@ -13,7 +13,8 @@ import { createSoundManager } from './audio/audio';
 import { createStampBanner } from './ui/stamp-banner';
 import { createSceneManager } from './scenes/scene-manager';
 import { HUB } from './scenes/scene-types';
-import { createPostEffects } from './loop/post-effects';
+import { createPostEffects, type PostEffects } from './loop/post-effects';
+import { playOpening, type OpeningController } from './opening/opening';
 import type { GameEvents, GameInstance, GameOptions, GameState, VehicleState } from './types';
 
 export type { GameEvents, GameInstance, GameOptions, GameState, VehicleState };
