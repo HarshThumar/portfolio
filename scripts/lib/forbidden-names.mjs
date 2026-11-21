@@ -30,7 +30,14 @@ export function loadForbiddenTerms() {
       '[forbidden-names] No .forbidden-names file and no FORBIDDEN_NAMES env var; private names are NOT being checked.'
     );
   }
-  return { names: privateNames ?? [], phrases: FORBIDDEN_PHRASES };
+  // A very short entry (a typo in the secret, say) would match half the repo and block
+  // every deploy, so it is ignored with a warning instead.
+  const names = (privateNames ?? []).filter((name) => {
+    if (name.length >= 5) return true;
+    console.warn(`[forbidden-names] Ignoring a ${name.length}-character entry; it is too short.`);
+    return false;
+  });
+  return { names, phrases: FORBIDDEN_PHRASES };
 }
 
 export function findForbidden(text, terms) {
