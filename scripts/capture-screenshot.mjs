@@ -4,7 +4,8 @@ import { dirname } from 'node:path';
 import { chromium } from '@playwright/test';
 
 const targetUrl = process.argv[2] || 'http://localhost:4321/?debug';
-const outputPath = process.argv[3] || 'progress/M1.1.png';
+const outputPath = process.argv[3] || 'progress/M1.5.png';
+const action = process.argv[4];
 
 const dir = dirname(outputPath);
 if (!existsSync(dir)) {
@@ -44,18 +45,27 @@ async function main() {
   });
   const page = await context.newPage();
 
-  page.on('console', (msg) => {
-    if (msg.type() === 'error') console.error('[page error]', msg.text());
-  });
-
   await page.goto(targetUrl, { waitUntil: 'networkidle' });
-
-  // Wait for canvas and debug panel
   await page.waitForSelector('#tour-canvas');
   await page.waitForSelector('#perf-debug-panel', { state: 'visible', timeout: 5000 });
 
-  // Allow frames and FPS calculation to settle
-  await page.waitForTimeout(1000);
+  if (action === 'pavilion') {
+    // Open the Honours Board dialog
+    await page.evaluate(() => {
+      const modal = document.getElementById('long-room-honours-board');
+      if (modal) modal.style.display = 'block';
+    });
+    await page.waitForTimeout(500);
+
+    // Expand the first rediscovered advisory story to show the interaction
+    const advisoryRow = await page.$('.honours-row[data-idx="6"]');
+    if (advisoryRow) {
+      await advisoryRow.click();
+      await page.waitForTimeout(500);
+    }
+  } else {
+    await page.waitForTimeout(1000);
+  }
 
   await page.screenshot({ path: outputPath });
   console.log(`Saved screenshot to ${outputPath}`);

@@ -7,6 +7,10 @@ export interface GroundBaseInstance {
   dispose: () => void;
 }
 
+export interface GroundBaseOptions {
+  hideNorthSightScreen?: boolean;
+}
+
 const BOUNDARY_RADIUS_X = 42;
 const BOUNDARY_RADIUS_Z = 50;
 
@@ -225,7 +229,8 @@ export function createGroundBase(
   scene: THREE.Scene,
   world: RAPIER.World,
   rapier: typeof RAPIER,
-  materials: SharedMaterials
+  materials: SharedMaterials,
+  options: GroundBaseOptions = {}
 ): GroundBaseInstance {
   const rootGroup = new THREE.Group();
   rootGroup.name = 'ground-base';
@@ -240,23 +245,26 @@ export function createGroundBase(
   const rope = createBoundaryRope(materials);
   rootGroup.add(rope.group);
 
-  const northScreen = createSightScreen(materials, -53);
+  let screenCol1: RAPIER.Collider | undefined;
+  if (!options.hideNorthSightScreen) {
+    const northScreen = createSightScreen(materials, -53);
+    rootGroup.add(northScreen);
+    const screenDesc1 = rapier.ColliderDesc.cuboid(3, 2, 0.2).setTranslation(0, 1.75, -53);
+    screenCol1 = world.createCollider(screenDesc1);
+  }
+
   const southScreen = createSightScreen(materials, 53);
-  rootGroup.add(northScreen, southScreen);
+  rootGroup.add(southScreen);
 
   const stands = createStandsShell(materials);
   rootGroup.add(stands.group);
 
   scene.add(rootGroup);
 
-  // Rapier physics colliders for ground & obstacles
   const groundDesc = rapier.ColliderDesc.cuboid(60, 0.5, 60).setTranslation(0, -0.5, 0);
   const groundCollider = world.createCollider(groundDesc);
 
-  // Sight screen colliders
-  const screenDesc1 = rapier.ColliderDesc.cuboid(3, 2, 0.2).setTranslation(0, 1.75, -53);
   const screenDesc2 = rapier.ColliderDesc.cuboid(3, 2, 0.2).setTranslation(0, 1.75, 53);
-  const screenCol1 = world.createCollider(screenDesc1);
   const screenCol2 = world.createCollider(screenDesc2);
 
   return {
@@ -269,7 +277,7 @@ export function createGroundBase(
       rope.dispose();
       stands.dispose();
       world.removeCollider(groundCollider, false);
-      world.removeCollider(screenCol1, false);
+      if (screenCol1) world.removeCollider(screenCol1, false);
       world.removeCollider(screenCol2, false);
     }
   };

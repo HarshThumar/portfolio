@@ -16,6 +16,8 @@ import { createStageRender } from './loop/stage-render';
 import { createStageUi } from './loop/stage-ui';
 import { createSharedMaterials } from './world/palette';
 import { createGroundBase } from './world/ground-base';
+import { createLordsPavilion } from './world/lords-pavilion';
+import { createHonoursBoard, type HonoursBoardController } from './world/honours-board';
 import { createRoller } from './vehicle/roller';
 import { setupTouchAndClickControls } from './vehicle/touch-controls';
 import { createStumps } from './interactions/stumps';
@@ -81,7 +83,7 @@ function setupInteractions(
   stageInteractions: ReturnType<typeof createStageInteractions>,
   soundManager: SoundManager,
   stampBanner: StampBanner
-): { dispose: () => void } {
+): { honoursBoard: HonoursBoardController; dispose: () => void } {
   const stumps = createStumps(scene, world, RAPIER, materials, () => {
     soundManager.playStumpClatter();
     soundManager.playHowzat();
@@ -98,14 +100,19 @@ function setupInteractions(
     stampBanner.show('INFO POST');
   });
 
+  const honoursBoard = createHonoursBoard({ x: 0, z: -46 });
+
   stageInteractions.addUpdatable(stumps.update);
   stageInteractions.addUpdatable(boundary.update);
   stageInteractions.addUpdatable(infoPost.update);
+  stageInteractions.addUpdatable(honoursBoard.update);
 
   return {
+    honoursBoard,
     dispose: () => {
       stumps.dispose();
       infoPost.dispose();
+      honoursBoard.destroy();
       stageInteractions.clear();
     }
   };
@@ -212,8 +219,11 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
   setupLighting(scene);
 
   const materials = createSharedMaterials();
-  const groundBase = createGroundBase(scene, world, RAPIER, materials);
-  const vehicle = createRoller(scene, world, RAPIER, materials, { x: 0, y: 0.6, z: 6 });
+  const groundBase = createGroundBase(scene, world, RAPIER, materials, {
+    hideNorthSightScreen: true
+  });
+  const pavilion = createLordsPavilion(scene, world, RAPIER, materials, { x: 0, y: 0, z: -54 }, 0);
+  const vehicle = createRoller(scene, world, RAPIER, materials, { x: 0, y: 0.6, z: 6 }, Math.PI);
   bodies.set('roller', vehicle.body);
 
   const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -272,6 +282,7 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
       stampBanner.destroy();
       interactionCleanup.dispose();
       groundBase.dispose();
+      pavilion.dispose();
       vehicle.model.dispose();
       materials.dispose();
       renderer.dispose();
