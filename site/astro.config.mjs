@@ -6,5 +6,10 @@ export default defineConfig({
   output: 'static',
   site: 'https://harshthumar.github.io',
   base: process.env.BASE_PATH || '/',
-  trailingSlash: 'always'
+  trailingSlash: 'always',
+  vite: {
+    build: {
+      chunkSizeWarningLimit: 6000
+    }
+  }
 });

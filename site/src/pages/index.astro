@@ -60,11 +60,11 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
     <canvas id="tour-canvas" aria-label="[[COPY: canvas label for screen readers]]"></canvas>
 
     <script>
-      import { initGame } from 'game';
-
       const canvas = document.getElementById('tour-canvas');
       if (canvas instanceof HTMLCanvasElement) {
-        initGame({ canvas });
+        import('game').then(async ({ initGame }) => {
+          await initGame({ canvas });
+        });
       }
     </script>
   </body>

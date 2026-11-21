@@ -15,12 +15,5 @@
   // Pinned in M0.3 but first imported in M1 (physics, sound, timelines) or used only by
   // CI tools that are not wired into `npm run check` yet (Lighthouse M4, Vitest M1).
   // Remove each entry as soon as the package is imported.
-  "ignoreDependencies": [
-    "@dimforge/rapier3d-compat",
-    "howler",
-    "@types/howler",
-    "gsap",
-    "@lhci/cli",
-    "vitest"
-  ]
+  "ignoreDependencies": ["howler", "@types/howler", "gsap", "@lhci/cli"]
 }
