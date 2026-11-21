@@ -13,6 +13,7 @@ import { createSoundManager } from './audio/audio';
 import { createStampBanner } from './ui/stamp-banner';
 import { createSceneManager } from './scenes/scene-manager';
 import { HUB } from './scenes/scene-types';
+import { createPostEffects } from './loop/post-effects';
 import type { GameEvents, GameInstance, GameOptions, GameState, VehicleState } from './types';
 
 export type { GameEvents, GameInstance, GameOptions, GameState, VehicleState };
@@ -90,13 +91,22 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
   );
   firstWorld.world.free();
 
+  const noPost =
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('nopost');
+  const quality =
+    typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+      ? 'low'
+      : 'high';
+  const postEffects = noPost ? null : createPostEffects(renderer, quality);
+
   const loop = startMainLoop({
     state,
     stageInputs,
     stageInteractions: interactions,
     updateDebugPanel: debugController.update,
     soundManager: sound,
-    extraUpdatables: []
+    extraUpdatables: [],
+    postEffects
   });
   const cleanupResize = setupResizeHandler(camera, renderer, events);
 
@@ -112,6 +122,7 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
       scenes.destroy();
       banner.destroy();
       sound.destroy();
+      postEffects?.dispose();
       materials.dispose();
       renderer.dispose();
       for (const fn of state.disposables) fn();
