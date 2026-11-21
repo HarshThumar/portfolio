@@ -15,14 +15,16 @@ export interface ActivePiece {
 const BALL_Y = 55;
 const BALL_Z = -10;
 
-/** Scatters kit pieces 28–45m around the sky and configures flight paths. */
+/** Scatters kit pieces 16–28 m around the ball and configures flight paths. */
+// Kit is drawn about twice life size so each piece reads at a glance from the camera.
+const PIECE_SCALE = 2.2;
 export function setupActivePieces(scene: THREE.Scene, pieces: KitPiece[]): ActivePiece[] {
   const active: ActivePiece[] = [];
   const total = pieces.length;
 
   for (let i = 0; i < total; i++) {
     const piece = pieces[i]!;
-    const dist = 28 + Math.random() * 17;
+    const dist = 16 + Math.random() * 12;
     // Disperse in front of and around camera
     const angle = (i / total) * Math.PI * 1.8 - 0.9 * Math.PI + (Math.random() - 0.5) * 0.3;
     const dy = (Math.random() - 0.5) * 16;
@@ -61,8 +63,8 @@ export function setupActivePieces(scene: THREE.Scene, pieces: KitPiece[]): Activ
       curveOffset,
       startRot,
       spinAxis,
-      delay: 0.3 + (i / total) * 1.9 + Math.random() * 0.2,
-      duration: 0.75 + Math.random() * 0.25
+      delay: 0.3 + (i / total) * 1.4 + Math.random() * 0.2,
+      duration: 1.1 + Math.random() * 0.3
     });
   }
 
@@ -85,7 +87,7 @@ export function updateActivePieces(
 
     if (p <= 0) {
       item.piece.object.position.copy(item.startPos);
-      item.piece.object.scale.setScalar(1);
+      item.piece.object.scale.setScalar(PIECE_SCALE);
       item.piece.object.visible = true;
       continue;
     }
@@ -108,7 +110,7 @@ export function updateActivePieces(
 
     // Shrink into ball surface as it arrives
     const scale = p > 0.82 ? Math.max(0, (1 - p) / 0.18) : 1;
-    item.piece.object.scale.setScalar(scale);
+    item.piece.object.scale.setScalar(scale * PIECE_SCALE);
     item.piece.object.visible = scale > 0.01;
   }
 

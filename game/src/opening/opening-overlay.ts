@@ -6,10 +6,7 @@ export interface OpeningOverlay {
 }
 
 /** Overlay displaying name, positioning, and play button once the ball is assembled. */
-export function createOpeningOverlay(params: {
-  base: string;
-  onPlay: () => void;
-}): OpeningOverlay {
+export function createOpeningOverlay(params: { base: string; onPlay: () => void }): OpeningOverlay {
   const container = document.createElement('div');
   container.className = 'opening-overlay';
   container.setAttribute('aria-live', 'polite');

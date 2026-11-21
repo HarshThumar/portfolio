@@ -14,7 +14,7 @@ import { createStampBanner } from './ui/stamp-banner';
 import { createSceneManager } from './scenes/scene-manager';
 import { HUB } from './scenes/scene-types';
 import { createPostEffects, type PostEffects } from './loop/post-effects';
-import { playOpening, type OpeningController } from './opening/opening';
+import { playOpening } from './opening/opening';
 import type { GameEvents, GameInstance, GameOptions, GameState, VehicleState } from './types';
 
 export type { GameEvents, GameInstance, GameOptions, GameState, VehicleState };
@@ -36,6 +36,19 @@ function setupResizeHandler(
   return () => window.removeEventListener('resize', onResize);
 }
 
+function createPost(renderer: WebGPURenderer): PostEffects | null {
+  // ?nopost shows the raw render, for comparing the camera finish.
+  if (new URLSearchParams(window.location.search).has('nopost')) return null;
+  const coarse = window.matchMedia('(pointer: coarse)').matches;
+  return createPostEffects(renderer, coarse ? 'low' : 'high');
+}
+
+/** Reports 1 once the loop has drawn a frame, so the loader never hides an empty canvas. */
+function reportFirstFrame(onProgress?: (p: number) => void): void {
+  if (!onProgress) return;
+  requestAnimationFrame(() => requestAnimationFrame(() => onProgress(1)));
+}
+
 function resolveDebug(optionsDebug?: boolean): boolean {
   const isDebugUrl =
     typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debug');
@@ -51,7 +64,9 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
 
   // Renderer first: if WebGPU/WebGL2 setup fails, nothing else (DOM HUD, listeners) exists yet.
   const { renderer, backend } = await createRenderer(canvas);
+  options.onProgress?.(0.4);
   await RAPIER.init();
+  options.onProgress?.(0.6);
 
   // A stand-in scene and world until the scene manager loads the first real one.
   const firstWorld = createPhysicsWorld(RAPIER);
@@ -87,18 +102,12 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
     base: options.base,
     ctx: { sound, banner, materials, grounds: options.grounds, built: new Set(options.built) }
   });
-  scenes.start(
-    options.start === HUB || options.built.includes(options.start) ? options.start : HUB
-  );
+  const startId =
+    options.start === HUB || options.built.includes(options.start) ? options.start : HUB;
+  scenes.start(startId);
   firstWorld.world.free();
-
-  const noPost =
-    typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('nopost');
-  const quality =
-    typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
-      ? 'low'
-      : 'high';
-  const postEffects = noPost ? null : createPostEffects(renderer, quality);
+  options.onProgress?.(0.9);
+  const postEffects = createPost(renderer);
 
   const loop = startMainLoop({
     state,
@@ -110,12 +119,19 @@ export async function initGame(options: GameOptions): Promise<GameInstance> {
     postEffects
   });
   const cleanupResize = setupResizeHandler(camera, renderer, events);
+  // docs/03: the kit becomes a ball in the hub's sky, only on the home page.
+  const opening =
+    options.opening && startId === HUB
+      ? playOpening({ state, sound, base: options.base, onDone: () => undefined })
+      : null;
+  reportFirstFrame(options.onProgress);
 
   const instance: GameInstance = {
     travel: scenes.travel,
     getState: () => state,
     dispose: () => {
       loop.stop();
+      opening?.dispose();
       cleanupResize();
       cleanupInputs();
       touchControls.destroy();

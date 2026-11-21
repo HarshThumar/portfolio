@@ -144,7 +144,10 @@ export function buildCapObject(geo: HeadStumpsGeometries, mat: HeadStumpsMateria
   return group;
 }
 
-export function buildStumpsObject(geo: HeadStumpsGeometries, mat: HeadStumpsMaterials): THREE.Group {
+export function buildStumpsObject(
+  geo: HeadStumpsGeometries,
+  mat: HeadStumpsMaterials
+): THREE.Group {
   const group = new THREE.Group();
   group.name = 'kit-stumps';
 

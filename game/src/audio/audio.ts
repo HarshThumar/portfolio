@@ -118,13 +118,7 @@ function tone(
   osc.stop(t + dur);
 }
 
-function noiseBurst(
-  bus: Bus,
-  dur: number,
-  peak: number,
-  v: NoiseVariant,
-  endFreq?: number
-): void {
+function noiseBurst(bus: Bus, dur: number, peak: number, v: NoiseVariant, endFreq?: number): void {
   const { ctx } = bus;
   const t = ctx.currentTime;
   const src = ctx.createBufferSource();

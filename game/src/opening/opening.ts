@@ -3,16 +3,15 @@ import type { GameState } from '../types';
 import type { SoundManager } from '../audio/audio';
 import { createGiantBall, type GiantBall } from './giant-ball';
 import { createKitPieces } from './kit-models';
-import {
-  setupActivePieces,
-  updateActivePieces,
-  collapseActivePieces
-} from './opening-pieces';
+import { setupActivePieces, updateActivePieces, collapseActivePieces } from './opening-pieces';
 import { createOpeningOverlay } from './opening-overlay';
 import { startBowlAnimation, runReducedMotionBowl } from './opening-bowl';
 
 const BALL_POS = new THREE.Vector3(0, 55, -10);
-const CAM_POS = new THREE.Vector3(0, 48, 5);
+// The camera looks slightly down past the ball, so the ball sits in the upper half (clear of
+// the name and button) and the stadium's roof ring and LED lights show below it.
+const CAM_POS = new THREE.Vector3(0, 58, 9);
+const CAM_LOOK = new THREE.Vector3(0, 50, -10);
 const READY_TIME = 3.6;
 const SEEN_KEY = 'tour-opening-seen';
 
@@ -26,8 +25,7 @@ function checkSeen(): boolean {
 
 function checkReducedMotion(): boolean {
   return (
-    typeof window !== 'undefined' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
 }
 
@@ -107,7 +105,7 @@ export function playOpening(params: {
 
   state.cameraShot = (camera, look, dt) => {
     camera.position.copy(CAM_POS);
-    look.copy(BALL_POS);
+    look.copy(CAM_LOOK);
     if (isReady) {
       ball.group.rotation.y += 0.25 * dt;
       return false;

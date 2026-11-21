@@ -1,4 +1,4 @@
-export type OpeningPhaseName = 'gather' | 'stitch' | 'ready';
+type OpeningPhaseName = 'gather' | 'stitch' | 'ready';
 
 export interface OpeningPhaseState {
   phase: OpeningPhaseName;
