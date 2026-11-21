@@ -4,8 +4,8 @@ import * as THREE from 'three/webgpu';
 // little spin after letting go, then turns its stamp back to the camera when left alone.
 
 const SPIN_PER_PX = 0.008;
-const FRICTION = 2.4;
-const SETTLE_AFTER = 2.5;
+const FRICTION = 4;
+const SETTLE_AFTER = 1;
 
 export interface BallDrag {
   enable: () => void;
@@ -69,7 +69,7 @@ export function createBallDrag(): BallDrag {
         velY *= keep;
       }
       pendingX = pendingY = 0;
-      const moving = Math.abs(velX) + Math.abs(velY) > 0.05;
+      const moving = Math.abs(velX) + Math.abs(velY) > 0.3;
       idle = dragging || moving ? 0 : idle + dt;
       if (idle >= SETTLE_AFTER) return false;
       // Drag sideways turns it round the screen's up axis, drag up/down round its right axis.

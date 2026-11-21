@@ -13,8 +13,7 @@ export function createOpeningOverlay(params: { base: string; onPlay: () => void 
 
   const tagline = document.createElement('p');
   tagline.className = 'opening-tagline';
-  tagline.textContent =
-    'I build AI agents that handle real money, and they never make up a number.';
+  tagline.textContent = 'I build AI agents that play by the Laws.';
 
   const playBtn = document.createElement('button');
   playBtn.type = 'button';

@@ -91,6 +91,12 @@ export function createGiantBall(): GiantBall {
   });
   const quarters = createQuarters(leather, geos);
   for (const q of quarters) group.add(q.mesh);
+  // Once the quarters have closed, one whole sphere takes over, so no hairline shows where
+  // the four patches meet.
+  const wholeGeo = new THREE.SphereGeometry(BALL_RADIUS, 96, 64);
+  geos.push(wholeGeo);
+  const whole = new THREE.Mesh(wholeGeo, leather);
+  group.add(whole);
 
   const seams = createBallSeams(BALL_RADIUS);
   group.add(seams.group);
@@ -109,11 +115,12 @@ export function createGiantBall(): GiantBall {
     const c = Math.max(0, Math.min(1, p));
     const e = easeOutBack(c);
     for (const q of quarters) {
-      q.mesh.visible = c > 0;
+      q.mesh.visible = c > 0 && c < 1;
       q.mesh.position.copy(q.out).multiplyScalar(3.2 * (1 - e));
       q.mesh.quaternion.setFromAxisAngle(q.spin, 1.4 * (1 - e));
       q.mesh.scale.setScalar(0.55 + 0.45 * Math.min(1, e));
     }
+    whole.visible = c >= 1;
   };
   setPanels(0);
 

@@ -28,7 +28,7 @@ Changed 22 Nov 2026 (Harsh): overcast Test-match sky, no stadium during the form
 | loaded | **Overcast Test-match sky**: soft grey layered clouds drifting, flat diffuse light, no sun, no ground or stadium in view. The camera slowly orbits the centre. | — |
 | +0.3–3 s | Cricket kit drifts in from every side (bats, pads, gloves, helmets, stumps and bails, caps, balls) and gathers into a rough sphere in the centre. | — |
 | +3–3.8 s | The cluster becomes **four red leather quarters** that close together into one Test ball. | — |
-| +3.8–4.6 s | The **seam stitches itself**: the raised main seam with six rows of stitching, then the two quarter seams. | — |
+| +3.8–4.6 s | The **seam stitches itself**: the raised main seam with three rows of stitching either side of the ridge (no visible quarter seams). | — |
 | +4.6–5.6 s | The ball turns to show a **gold-foil maker's stamp**: "HT" with small curved text around it (HARSH THUMAR · TEST); a light sweep runs across the foil. Our own design, never a real maker's logo. | — |
 | ready | Under the ball: the one-line positioning from 02 and one button **Bowl it**. Small: sound on · Scorecard view. | — |
 | click | The ball is **bowled down**: it drops through the cloud layer, the camera follows, the Ahmedabad stadium appears below, the ball pitches on the square and bounces away like a six, and the visitor lands on the roller in the hub. ~3 s. | whoosh, leather-on-turf thud, crowd roar |

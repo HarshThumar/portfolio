@@ -1,7 +1,7 @@
 import * as THREE from 'three/webgpu';
 
-// The seams of a Test ball (docs/03): a raised main seam round the equator with six rows of
-// stitching, and two quarter seams, one across each hemisphere, at right angles to each other.
+// The seam of a Test ball (docs/03): a raised ridge round the equator with three rows of
+// stitching either side. Quarter seams are left off: on a real ball they barely show.
 
 // Three rows each side of the ridge, packed close so each side reads as one strip of stitching
 // with the dark ridge clearly between the two strips.
@@ -11,7 +11,7 @@ const MAIN_COUNT = ROW_HEIGHTS.length * PER_ROW;
 
 export interface BallSeams {
   group: THREE.Group;
-  /** 0→1: the ridge rises, the six rows stitch round (to 0.75), then the faint quarter seams. */
+  /** 0→1: the ridge rises and the six rows stitch round the ball. */
   setSeam: (p: number) => void;
   dispose: () => void;
 }
@@ -47,9 +47,6 @@ export function createBallSeams(radius: number): BallSeams {
     clearcoat: 0.4
   });
   const threadMat = new THREE.MeshStandardMaterial({ color: 0xf1e6cf, roughness: 0.75 });
-  // Quarter seams on a real Test ball are stitched from the inside: all that shows is a faint
-  // line in the leather, so no thread and only a shade darker than the leather.
-  const lineMat = new THREE.MeshStandardMaterial({ color: 0x861b14, roughness: 0.55 });
 
   // A broad, flattish ridge: stretched up and down so the seam reads wide from a distance.
   const ridgeGeo = new THREE.TorusGeometry(radius - 0.01, 0.11, 10, 160);
@@ -62,14 +59,7 @@ export function createBallSeams(radius: number): BallSeams {
   placeMainStitches(main, radius);
   main.count = 0;
 
-  const upperGeo = new THREE.TorusGeometry(radius - 0.003, 0.012, 5, 96, Math.PI);
-  const lowerGeo = upperGeo.clone();
-  lowerGeo.rotateX(Math.PI);
-  lowerGeo.rotateY(Math.PI / 2);
-  const upperLine = new THREE.Mesh(upperGeo, lineMat);
-  const lowerLine = new THREE.Mesh(lowerGeo, lineMat);
-
-  group.add(ridge, main, upperLine, lowerLine);
+  group.add(ridge, main);
 
   const setSeam = (p: number): void => {
     const c = Math.max(0, Math.min(1, p));
@@ -77,8 +67,7 @@ export function createBallSeams(radius: number): BallSeams {
     // The ridge swells up out of the leather in the first moment.
     const rise = Math.min(1, c / 0.12);
     ridge.scale.set(1, 0.3 + 0.7 * rise, 1);
-    main.count = Math.floor(Math.min(1, c / 0.75) * MAIN_COUNT);
-    upperLine.visible = lowerLine.visible = c > 0.75;
+    main.count = Math.floor(c * MAIN_COUNT);
   };
   setSeam(0);
 
@@ -86,8 +75,8 @@ export function createBallSeams(radius: number): BallSeams {
     group,
     setSeam,
     dispose: () => {
-      for (const g of [ridgeGeo, stitchGeo, upperGeo, lowerGeo]) g.dispose();
-      for (const m of [ridgeMat, threadMat, lineMat]) m.dispose();
+      for (const g of [ridgeGeo, stitchGeo]) g.dispose();
+      for (const m of [ridgeMat, threadMat]) m.dispose();
       main.dispose();
     }
   };

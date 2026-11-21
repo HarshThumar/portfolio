@@ -18,7 +18,7 @@ Source: `D:\personal-workspace\linkdeln\linkedin\profile-2026-11-20.md` (built f
   - LinkedIn: https://www.linkedin.com/in/harsh-thumar-357037251/
   - GitHub: https://github.com/HarshThumar
   - Email: harshthummar1000@gmail.com (the only email shown anywhere; never a CredPrism or DataSlush address)
-- **One-line positioning:** "I build AI agents that handle real money, and they never make up a number." (Harsh asked for a new hook on 22 Nov 2026; backed by "the LLM never writes a digit" and "every claim traces back to a source cell".)
+- **One-line positioning:** "I build AI agents that play by the Laws." (Harsh chose this on 22 Nov 2026. "The Laws" is the cricket word for the rules, kept at Lord's; it points at agents that follow checked rules: the Tamarin models, the cited credit memo, the LLM that never writes a digit.)
 
 ## Naming rules
 - Name **CredPrism** and **DataSlush** as employers.
